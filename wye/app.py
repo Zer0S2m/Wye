@@ -11,6 +11,10 @@ from wye.types import (
 	Send, Receive
 )
 from wye.request import Request
+from wye.utils import (
+	check_prefix_start, check_prefix_end
+)
+from wye.errors import ErrorPrefix
 
 
 def request_response(func):
@@ -44,6 +48,11 @@ class Wye:
 		path: str,
 		app: ASGIApp
 	) -> None:
+		if not check_prefix_start(path):
+			raise ErrorPrefix("Invalid prefix at the beginning of the path")
+		if not check_prefix_end(path):
+			raise ErrorPrefix("Incorrect path ending")
+
 		for route in app.router.routes:
 			route.path = f"{path}{route.path}"
 			route.set_path_regex(path = route.path)
