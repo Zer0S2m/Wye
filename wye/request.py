@@ -1,9 +1,7 @@
 from wye.types import Scope
-from wye.utils import (
-	parse_query_string, create_url
-)
+from wye.utils import create_url
 from wye.datastructures import (
-	URL, Headers
+	URL, Headers, QueryParams
 )
 
 
@@ -26,8 +24,11 @@ class Request:
 		return self._url
 
 	@property
-	def query_params(self) -> None:
-		return parse_query_string(self._scope["query_string"])
+	def query_params(self) -> QueryParams:
+		if not hasattr(self, "_query_params"):
+			self._query_params = QueryParams(self._scope["query_string"])
+
+		return self._query_params
 
 	@property
 	def headers(self) -> Headers:

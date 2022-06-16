@@ -7,6 +7,9 @@ from wye.routing import (
 )
 from wye.app import Wye
 from wye.request import Request
+from wye.datastructures import (
+	URL, Headers, QueryParams
+)
 
 
 __version__ = "0.1.0"
@@ -20,5 +23,8 @@ __all__ = [
 	"Router",
 	"Path",
 	"Wye",
-	"Request"
+	"Request",
+	"URL",
+	"Headers",
+	"QueryParams"
 ]

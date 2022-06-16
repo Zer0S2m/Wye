@@ -145,8 +145,36 @@ from wye import Request
 
 ### URL
 
+```python
+from wye import URL
+```
+
 1) `Request.url` - получить url, по которому был запрос
 2) `Request.url.query_string` - получить строку запроса
 3) `Request.url.path` - получить путь, по которому был сделан
 4) `Request.url.scheme` - получить протокол
 5) `Request.url.netloc` - получить сетевое расположение
+
+### Headers
+
+```python
+from wye import Headers
+```
+
+1) `Request.headers` - получить Headers
+2) `Request.headers.values()` - получить значения
+3) `Request.headers.keys()` - получить ключи
+4) `Request.headers.items()` - получить список заголовков
+5) `Request.headers.get(key)` - получить заголовок `(название, значение)`
+
+### QueryParams
+
+```python
+from wye import QueryParams
+```
+
+1) `Request.query_params` - получить QueryParams
+2) `Request.query_params.values()` - получить значения
+3) `Request.query_params.keys()` - получить ключи
+4) `Request.query_params.items()` - получить список паметры строки
+5) `Request.query_params.get(key)` - получить параметр строки `(название, значение)`
