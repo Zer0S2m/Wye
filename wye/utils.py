@@ -24,3 +24,15 @@ def parse_query_string(
 			query_params[query_param_split[0]] = query_param_split[-1]
 
 	return query_params
+
+
+def check_prefix_start(
+	path: str
+) -> bool:
+	return path[0] == "/"
+
+
+def check_prefix_end(
+	path: str
+) -> bool:
+	return not path[-1] == "/"
