@@ -1,6 +1,10 @@
 from wye.types import Scope
-from wye.utils import parse_query_string
-from wye.datastructures import URL
+from wye.utils import (
+	parse_query_string, create_url
+)
+from wye.datastructures import (
+	URL, Headers
+)
 
 
 class Request:
@@ -15,25 +19,19 @@ class Request:
 		return self._scope["method"]
 
 	@property
-	def url(self):
+	def url(self) -> URL:
 		if not hasattr(self, "_url"):
-			scheme = self._scope["scheme"]
-			host, port = self._scope["server"]
-			path = self._scope.get("root_path", "") + self._scope["path"]
-			query_string = self._scope["query_string"].decode()
-
-			if port:
-				url = f"{scheme}://{host}:{port}{path}"
-			else:
-				url = f"{scheme}://{host}{path}"
-
-			if query_string:
-				url += f"?{query_string}"
-
-			self._url = URL(url)
+			self._url = URL(create_url(self._scope))
 
 		return self._url
 
 	@property
 	def query_params(self) -> None:
 		return parse_query_string(self._scope["query_string"])
+
+	@property
+	def headers(self) -> Headers:
+		if not hasattr(self, "_headers"):
+			self._headers = Headers(self._scope["headers"])
+
+		return self._headers

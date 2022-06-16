@@ -2,6 +2,8 @@ from typing import (
 	Dict, Union
 )
 
+from wye.types import Scope
+
 
 def parse_query_string(
 	query_string: Union[bytes, str]
@@ -24,6 +26,25 @@ def parse_query_string(
 			query_params[query_param_split[0]] = query_param_split[-1]
 
 	return query_params
+
+
+def create_url(
+	scope: Scope
+) -> str:
+	scheme = scope["scheme"]
+	host, port = scope["server"]
+	path = scope.get("root_path", "") + scope["path"]
+	query_string = scope["query_string"].decode()
+
+	if port:
+		url = f"{scheme}://{host}:{port}{path}"
+	else:
+		url = f"{scheme}://{host}{path}"
+
+	if query_string:
+		url += f"?{query_string}"
+
+	return url
 
 
 def check_prefix_start(
