@@ -129,6 +129,8 @@ from wye import Wye
 Функция должна принимать параметр `request` и возвращать `Response`, *example*:
 `func(request, **kwargs) -> responce`
 
+2) `.mount(path)` - Монтировать приложение `Wye`
+
 ### Request
 
 Запрос, который принимет ваш обработчик:
