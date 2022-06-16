@@ -9,6 +9,9 @@ from wye.types import (
 from wye.responce import Response
 
 
+
+
+
 class Route:
 	def matches(
 		self,
@@ -35,6 +38,13 @@ class Path(Route):
 		self.app = app
 		self.protocol = protocol
 		self.methods = methods
+
+		self.set_path_regex(path)
+
+	def set_path_regex(
+		self,
+		path: str
+	) -> None:
 		regex = f"^{path}$"
 		regex = re.sub("{([a-zA-Z_][a-zA-Z0-9_]*)}", r"(?P<\1>[^/]+)", regex)
 		self.path_regex = re.compile(regex)
