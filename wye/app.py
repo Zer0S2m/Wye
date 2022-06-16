@@ -39,6 +39,17 @@ class Wye:
 	) -> None:
 		self.router = Router(routes = [])
 
+	def mount(
+		self,
+		path: str,
+		app: ASGIApp
+	) -> None:
+		for route in app.router.routes:
+			route.path = f"{path}{route.path}"
+			route.set_path_regex(path = route.path)
+
+			self.router.routes.append(route)
+
 	def add_route(
 		self,
 		path: str,
