@@ -1,6 +1,6 @@
 from wye.responce import (
 	Response, PlainTextResponse, HTMLResponse,
-	JSONResponse
+	JSONResponse, FileResponse
 )
 from wye.routing import (
 	Route, Router, Path
@@ -26,5 +26,6 @@ __all__ = [
 	"Request",
 	"URL",
 	"Headers",
-	"QueryParams"
+	"QueryParams",
+	"FileResponse"
 ]

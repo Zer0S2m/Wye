@@ -77,6 +77,22 @@ class App:
         await response(receive, send)
 ```
 
+### FileResponse
+
+Принимает название файла и возвращает файд
+
+```python
+from wye import FileResponse
+
+class App:
+    def __init__(self, scope) -> None:
+        self.scope = scope
+
+    async def __call__(self, receive, send):
+        response = FileResponse("example_file.txt")
+        await response(receive, send)
+```
+
 ## Routing
 
 ### Router
