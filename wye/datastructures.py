@@ -186,8 +186,8 @@ class AsyncFile:
 			raise io.UnsupportedOperation()
 
 		async with self._rw_lock:
-			over_semaphore=asyncio.Semaphore(0)
-			_read_content=self._ReadContent()
+			over_semaphore = asyncio.Semaphore(0)
+			_read_content = self._ReadContent()
 			self._loop.run_in_executor(self._executor ,self._read, _read_content, over_semaphore)
 
 			await over_semaphore.acquire()
@@ -199,7 +199,7 @@ class AsyncFile:
 			raise io.UnsupportedOperation()
 
 		async with self._rw_lock:
-			over_semaphore=asyncio.Semaphore(0)
+			over_semaphore = asyncio.Semaphore(0)
 			self._loop.run_in_executor(self._executor ,self._write, content, over_semaphore)
 
 			await over_semaphore.acquire()
