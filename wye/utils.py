@@ -1,8 +1,6 @@
-from concurrent.futures import ThreadPoolExecutor
 from typing import (
 	Tuple, Union
 )
-import asyncio
 
 from wye.types import Scope
 
@@ -59,23 +57,3 @@ def check_prefix_end(
 	path: str
 ) -> bool:
 	return not path[-1] == "/"
-
-
-def get_local_file(
-	path: str,
-	file_name: str
-) -> None:
-	return open(file_name).read()
-
-
-async def get_file(
-	path: str,
-	file_name: str
-) -> None:
-	loop = asyncio.get_running_loop()
-	executor = ThreadPoolExecutor(1)
-
-	future = loop.run_in_executor(executor, get_local_file, path, file_name)
-	result = await asyncio.gather(future, return_exceptions = False)
-
-	return result
