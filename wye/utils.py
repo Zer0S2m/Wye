@@ -57,3 +57,10 @@ def check_prefix_end(
 	path: str
 ) -> bool:
 	return not path[-1] == "/"
+
+
+def set_header(
+	key_header: str,
+	value_header: str
+) -> Tuple[bytes]:
+	return (key_header.encode("latin-1"), value_header.encode("latin-1"))

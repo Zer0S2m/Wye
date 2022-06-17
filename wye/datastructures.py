@@ -100,7 +100,6 @@ class Headers(Mapping):
 	) -> None:
 		self._raw_headers = raw_headers
 		self._headers = []
-
 		self._set_headers()
 
 	def values(self) -> List[str]:
@@ -128,6 +127,9 @@ class Headers(Mapping):
 	def _set_headers(self) -> None:
 		for raw_header in self._raw_headers:
 			self._headers.append((raw_header[0].decode(), raw_header[1].decode()))
+
+	def __repr__(self) -> str:
+		return f"<{self.__class__.__name__}> {self.items()}"
 
 	def __getitem__(
 		self,
