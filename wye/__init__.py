@@ -1,4 +1,4 @@
-from wye.responce import (
+from wye.response import (
 	Response, PlainTextResponse, HTMLResponse,
 	JSONResponse, FileResponse
 )

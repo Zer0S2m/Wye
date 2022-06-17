@@ -1,11 +1,14 @@
 from typing import Any, Optional
 from mimetypes import guess_type
+from email.utils import formatdate
 import json
+import os
 
 from wye.types import (
 	Send, Receive
 )
 from wye.datastructures import AsyncFile
+from wye.utils import set_header
 
 
 class Response:
@@ -16,11 +19,15 @@ class Response:
 		self,
 		content: Any,
 		status_code: int = 200,
-		media_type: str = None,
+		media_type: Optional[str] = None,
 	) -> None:
 		self.body = self.render(content)
 		self.status_code = status_code
-		self.media_type = media_type
+
+		if media_type is not None:
+			self.media_type = media_type
+
+		self.init_headers()
 
 	def render(
 		self,
@@ -30,6 +37,18 @@ class Response:
 			return content
 		return content.encode(self.charset)
 
+	def init_headers(self) -> None:
+		self.headers = []
+
+		if hasattr(self, "body") and self.body:
+			self.headers.append(set_header("content-length", f"{len(self.body)}"))
+		if hasattr(self, "media_type") and self.media_type:
+			content_type = self.media_type
+			if content_type.startswith("text/"):
+				content_type += f"; charset={self.charset.upper()}"
+
+			self.headers.append(set_header("content-type", content_type))
+
 	async def __call__(
 		self,
 		receive: Receive,
@@ -38,6 +57,7 @@ class Response:
 		await send({
 			"type": "http.response.start",
 			"status": self.status_code,
+			"headers": self.headers
 		})
 		await send({
 			"type": "http.response.body",
@@ -61,7 +81,7 @@ class JSONResponse(Response):
 		self,
 		content: dict
 	) -> bytes:
-		return json.dumps(content).encode(self.charset)
+		return json.dumps(content).encode("utf-8")
 
 
 class FileResponse(Response):
@@ -76,21 +96,20 @@ class FileResponse(Response):
 		self.file_name = file_name
 		self.path = path
 		self.status_code = 200
-
-		if not media_type:
+		if media_type is None:
 			self.media_type = guess_type(self.file_name or self.path)[0] or "text/plain"
 		else:
 			self.media_type = media_type
 
-		self._set_headers()
+		self.init_headers()
+		self.set_stat_headers()
 
-	def _set_headers(
-		self
-	) -> None:
-		self.headers = [
-			("media_type".encode("latin-1"), self.media_type.encode("latin-1")),
-			("content-disposition".encode("latin-1"), f'attachment; filename="{self.file_name}"'.encode("latin-1"))
-		]
+	def set_stat_headers(self) -> None:
+		stat = os.stat(self.file_name)
+
+		self.headers.append(set_header("content-disposition", f'attachment; filename="{self.file_name}"'))
+		self.headers.append(set_header("content-length", f"{stat.st_size}"))
+		self.headers.append(set_header("last-modified", formatdate(stat.st_ctime)))
 
 	async def __call__(
 		self,

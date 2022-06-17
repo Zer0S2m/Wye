@@ -6,7 +6,7 @@ import re
 from wye.types import (
 	Scope, ASGIInstance, ASGIApp
 )
-from wye.responce import Response
+from wye.response import Response
 
 
 class Route:
