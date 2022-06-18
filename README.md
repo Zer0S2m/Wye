@@ -132,7 +132,19 @@ app = Router([
 ### Wye
 
 ```python
-from wye import Wye
+from wye import (
+    Wye, PlainTextResponse, FileResponse
+)
+
+app = Wye()
+
+@app.route("/")
+async def home(request):
+	return PlainTextResponse("home")
+
+@app.route("/about")
+async def home(request):
+	return FileResponse("about.pdf")
 ```
 
 #### Methods
