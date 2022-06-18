@@ -7,8 +7,8 @@ import os
 from wye.types import (
 	Send, Receive
 )
-from wye.datastructures import AsyncFile
-from wye.utils import set_header
+from wye.utils.aiofile import AsyncFile
+from wye.utils.sets import set_header
 
 
 class Response:

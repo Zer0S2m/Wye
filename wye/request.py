@@ -1,5 +1,5 @@
 from wye.types import Scope
-from wye.utils import create_url
+from wye.utils.parser import create_url
 from wye.datastructures import (
 	URL, Headers, QueryParams
 )

@@ -3,14 +3,9 @@ from typing import (
 	Tuple, Union, Mapping,
 	Iterator
 )
-from concurrent.futures import (
-	ProcessPoolExecutor, ThreadPoolExecutor
-)
-import asyncio
-import io
 import re
 
-from wye.utils import parse_query_string
+from wye.utils.parser import parse_query_string
 
 
 class QueryParams(Mapping):
@@ -146,107 +141,3 @@ class Headers(Mapping):
 
 	def __len__(self) -> int:
 		return len(self._headers)
-
-
-class AsyncFile:
-	class _ReadContent:
-		"""
-		Данные чтения из кэша читать в дочерней ветке
-		Используйте _ReadContent (). Content для хранения возвращаемого значения
-		"""
-		def __init__(self,content=None):
-			self.content=content
-
-	def __init__(
-		self,
-		path :str,
-		open_flag: str = "r",
-		executor: Optional[Union[ProcessPoolExecutor, ThreadPoolExecutor]] = None
-	) -> None:
-		self.path = path
-		self.open_flag = open_flag
-		self._f = open(path, open_flag)
-		self._loop = asyncio.get_event_loop()
-		self._rw_lock = asyncio.Lock()
-		self._executor = executor
-
-	async def read(self):
-		if not self._f.readable():
-			raise io.UnsupportedOperation()
-
-		async with self._rw_lock:
-			over_semaphore = asyncio.Semaphore(0)
-			_read_content = self._ReadContent()
-			self._loop.run_in_executor(self._executor ,self._read, _read_content, over_semaphore)
-
-			await over_semaphore.acquire()
-
-			return _read_content.content
-
-	async def read_by_chunk(
-		self,
-		chunk: int
-	):
-		content = b""
-		is_body = True
-
-		while is_body:
-			part_body = self._f.read(chunk)
-			content += part_body
-
-			is_body = len(part_body) == chunk
-			yield part_body
-
-	async def write(
-		self,
-		content: Any
-	) -> None:
-		if not self._f.writable():
-			raise io.UnsupportedOperation()
-
-		async with self._rw_lock:
-			over_semaphore = asyncio.Semaphore(0)
-			self._loop.run_in_executor(self._executor, self._write, content, over_semaphore)
-
-			await over_semaphore.acquire()
-
-	async def seek(self,
-		offset,
-		where: int = 0
-	) -> None:
-		async with self._rw_lock:
-			self._f.seek(offset, where)
-
-	async def close(self) -> None:
-		async with self._rw_lock:
-			self._f.close()
-
-	def _read(
-		self,
-		r_content: _ReadContent,
-		over_semaphore: asyncio.Semaphore
-	) -> None:
-		r_content.content = self._f.read(-1)
-		over_semaphore.release()
-
-	def _write(
-		self,
-		content: Any,
-		over_semaphore: asyncio.Semaphore
-	):
-		self._f.write(content)
-		over_semaphore.release()
-
-	async def __aenter__(self):
-		return self
-
-	async def __aexit__(
-		self,
-		exc_type,
-		exc_val,
-		traceback
-	) -> None:
-		try:
-			self._f.close()
-		finally:
-			pass

@@ -45,22 +45,3 @@ def create_url(
 		url += f"?{query_string}"
 
 	return url
-
-
-def check_prefix_start(
-	path: str
-) -> bool:
-	return path[0] == "/"
-
-
-def check_prefix_end(
-	path: str
-) -> bool:
-	return not path[-1] == "/"
-
-
-def set_header(
-	key_header: str,
-	value_header: str
-) -> Tuple[bytes]:
-	return (key_header.encode("latin-1"), value_header.encode("latin-1"))
