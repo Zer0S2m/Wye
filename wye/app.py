@@ -11,7 +11,7 @@ from wye.types import (
 	Send, Receive
 )
 from wye.request import Request
-from wye.utils import (
+from wye.utils.control import (
 	check_prefix_start, check_prefix_end
 )
 from wye.errors import ErrorPrefix
