@@ -30,11 +30,13 @@ class Path(Route):
 		app: ASGIApp,
 		methods: Sequence[str] = (),
 		protocol: str = None,
+		is_path_prefix: bool =  False
 	) -> None:
 		self.path = path
 		self.app = app
 		self.protocol = protocol
 		self.methods = methods
+		self.is_path_prefix = is_path_prefix
 
 		self.set_path_regex(path)
 
@@ -42,7 +44,11 @@ class Path(Route):
 		self,
 		path: str
 	) -> None:
-		regex = f"^{path}$"
+		if not self.is_path_prefix:
+			regex = f"^{path}$"
+		else:
+			regex = f"^{path}"
+
 		regex = re.sub("{([a-zA-Z_][a-zA-Z0-9_]*)}", r"(?P<\1>[^/]+)", regex)
 		self.path_regex = re.compile(regex)
 

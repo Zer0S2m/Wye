@@ -10,6 +10,7 @@ from wye.request import Request
 from wye.datastructures import (
 	URL, Headers, QueryParams
 )
+from wye.staticfiles import StaticFiles
 
 
 __version__ = "0.1.0"
@@ -27,5 +28,6 @@ __all__ = [
 	"URL",
 	"Headers",
 	"QueryParams",
-	"FileResponse"
+	"FileResponse",
+	"StaticFiles"
 ]
