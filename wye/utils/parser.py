@@ -1,6 +1,8 @@
 from typing import (
 	Tuple, Union
 )
+import os
+import re
 
 from wye.types import Scope
 
@@ -45,3 +47,22 @@ def create_url(
 		url += f"?{query_string}"
 
 	return url
+
+
+def create_path_join(
+	*args: str
+) -> str:
+	reg = re.compile(r"^\\|/")
+	parts = []
+	for arg in args:
+		parts.append(
+			re.sub(reg, "", create_path_normpath(arg))
+		)
+
+	return os.path.join(*parts)
+
+
+def create_path_normpath(
+	path: str
+) -> str:
+	return os.path.normpath(path)

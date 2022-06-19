@@ -9,6 +9,10 @@ from wye.types import (
 )
 from wye.utils.aiofile import AsyncFile
 from wye.utils.sets import set_header
+from wye.utils.control import check_isfile
+from wye.utils.parser import (
+	create_path_normpath, create_path_join
+)
 
 
 class Response:
@@ -101,15 +105,29 @@ class FileResponse(Response):
 		else:
 			self.media_type = media_type
 
+		self.set_path()
 		self.init_headers()
 		self.set_stat_headers()
 
 	def set_stat_headers(self) -> None:
-		stat = os.stat(self.file_name)
+		stat = os.stat(self.path)
 
 		self.headers.append(set_header("content-disposition", f'attachment; filename="{self.file_name}"'))
 		self.headers.append(set_header("content-length", f"{stat.st_size}"))
 		self.headers.append(set_header("last-modified", formatdate(stat.st_ctime)))
+
+	def set_path(self) -> None:
+		if self.path:
+			path = create_path_join(os.getcwd(), self.path, self.file_name)
+		else:
+			path = create_path_join(os.getcwd(), self.file_name)
+
+		self.path = create_path_normpath(path)
+		self.check_path()
+
+	def check_path(self) -> None:
+		if not check_isfile(self.path):
+			raise RuntimeError(f"StaticFile at path '{self.path}' does not exist.")
 
 	async def __call__(
 		self,
@@ -121,8 +139,7 @@ class FileResponse(Response):
 			"status": self.status_code,
 			"headers": self.headers
 		})
-
-		async with AsyncFile(self.file_name, open_flag = "rb") as file:
+		async with AsyncFile(self.path, open_flag = "rb") as file:
 			async for body in file.read_by_chunk(self.chunk_size):
 				more_body = len(body) == self.chunk_size
 

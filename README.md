@@ -20,6 +20,7 @@ pip install uvicorn
 ```python
 from wye import Response
 
+
 class App:
     def __init__(self, scope) -> None:
         self.scope = scope
@@ -35,6 +36,7 @@ class App:
 
 ```python
 from wye import HTMLResponse
+
 
 class App:
     def __init__(self, scope) -> None:
@@ -52,6 +54,7 @@ class App:
 ```python
 from wye import PlainTextResponse
 
+
 class App:
     def __init__(self, scope) -> None:
         self.scope = scope
@@ -67,6 +70,7 @@ class App:
 
 ```python
 from wye import JSONResponse
+
 
 class App:
     def __init__(self, scope) -> None:
@@ -84,12 +88,13 @@ class App:
 ```python
 from wye import FileResponse
 
+
 class App:
     def __init__(self, scope) -> None:
         self.scope = scope
 
     async def __call__(self, receive, send):
-        response = FileResponse("example_file.txt")
+        response = FileResponse("example_file.txt", path = "folder/example")
         await response(receive, send)
 ```
 
@@ -136,11 +141,14 @@ from wye import (
     Wye, PlainTextResponse, FileResponse
 )
 
+
 app = Wye()
+
 
 @app.route("/")
 async def home(request):
 	return PlainTextResponse("home")
+
 
 @app.route("/about")
 async def home(request):
@@ -158,6 +166,24 @@ async def home(request):
 `func(request, **kwargs) -> responce`
 
 3) `.mount(path)` - Монтировать приложение `Wye`
+
+### StaticFiles
+```python
+from wye import (
+    Wye, PlainTextResponse, StaticFiles
+)
+
+
+app = Wye()
+
+app.mount("/static", app = StaticFiles(directory = "static"))
+app.mount("/example", app = StaticFiles(directory = "example"))
+
+
+@app.route("/")
+async def home(request):
+	return PlainTextResponse("home")
+```
 
 ### Request
 
