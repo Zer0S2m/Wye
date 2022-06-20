@@ -10,9 +10,7 @@ from wye.types import (
 from wye.utils.aiofile import AsyncFile
 from wye.utils.sets import set_header
 from wye.utils.control import check_isfile
-from wye.utils.parser import (
-	create_path_normpath, create_path_join
-)
+from wye.utils.parser import create_path
 
 
 class Response:
@@ -117,12 +115,13 @@ class FileResponse(Response):
 		self.headers.append(set_header("last-modified", formatdate(stat.st_ctime)))
 
 	def set_path(self) -> None:
+		parts_path = list(self.path.split(r"/"))
 		if self.path:
-			path = create_path_join(os.getcwd(), self.path, self.file_name)
+			path = create_path(*parts_path, self.file_name)
 		else:
-			path = create_path_join(os.getcwd(), self.file_name)
+			path = create_path(self.file_name)
 
-		self.path = create_path_normpath(path)
+		self.path = path
 		self.check_path()
 
 	def check_path(self) -> None:
