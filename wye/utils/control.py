@@ -1,7 +1,5 @@
 import os
 
-from .parser import create_path_normpath
-
 
 def check_prefix_start(
 	path: str
@@ -16,10 +14,6 @@ def check_prefix_end(
 
 
 def check_isfile(
-	*args: str
+	path: str
 ) -> bool:
-	path = create_path_normpath(*args)
-	if os.path.isfile(path):
-		True
-
-	return False
+	return os.path.isfile(path)

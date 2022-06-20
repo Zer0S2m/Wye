@@ -3,6 +3,8 @@ from typing import (
 )
 import os
 import re
+import pathlib
+from pathlib import Path
 
 from wye.types import Scope
 
@@ -49,20 +51,14 @@ def create_url(
 	return url
 
 
-def create_path_join(
+def create_path(
 	*args: str
 ) -> str:
-	reg = re.compile(r"^\\|/")
-	parts = []
-	for arg in args:
-		parts.append(
-			re.sub(reg, "", create_path_normpath(arg))
+	reg = re.compile(r"\\|/")
+	parts_path = []
+	for part in args:
+		parts_path.append(
+			re.sub(reg, "", part)
 		)
 
-	return os.path.join(*parts)
-
-
-def create_path_normpath(
-	path: str
-) -> str:
-	return os.path.normpath(path)
+	return Path(pathlib.Path.cwd(), *parts_path)
