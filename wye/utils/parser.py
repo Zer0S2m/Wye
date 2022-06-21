@@ -12,13 +12,14 @@ from wye.types import Scope
 def parse_query_string(
 	query_string: Union[bytes, str]
 ) -> Tuple[str, int]:
-	query_strinf = query_string.decode()
+	if isinstance(query_string, bytes):
+		query_string = query_string.decode()
 
 	if not query_string:
 		return
 
 	query_params = []
-	query_params_split = query_strinf.split(r"&")
+	query_params_split = query_string.split(r"&")
 
 	for query_param in query_params_split:
 		query_param_split = query_param.split(r"=")

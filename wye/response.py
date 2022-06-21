@@ -115,8 +115,8 @@ class FileResponse(Response):
 		self.headers.append(set_header("last-modified", formatdate(stat.st_ctime)))
 
 	def set_path(self) -> None:
-		parts_path = list(self.path.split(r"/"))
 		if self.path:
+			parts_path = list(self.path.split(r"/"))
 			path = create_path(*parts_path, self.file_name)
 		else:
 			path = create_path(self.file_name)
