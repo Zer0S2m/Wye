@@ -6,7 +6,7 @@ from wye.routing import (
 )
 from wye.types import (
 	ASGIApp, Scope, Send,
-	Receive
+	Receive, ASGIInstance
 )
 from wye.request import Request
 
@@ -39,6 +39,7 @@ class StaticFiles:
 
 class _StaticFileRoute:
 	directory = None
+	methods = ("GET", "HEAD")
 
 	def __init__(
 		self,
@@ -52,19 +53,30 @@ class _StaticFileRoute:
 			self._request = Request(self.scope)
 		return self._request
 
+	def not_fount(
+		self,
+		scope: Scope
+	) -> ASGIInstance:
+		return PlainTextResponse("Not file", status_code = 404)
+
 	async def __call__(
 		self,
 		receive: Receive,
 		send: Send
 	) -> None:
-		if self.scope["method"] not in ("GET", "HEAD"):
-			return PlainTextResponse("Method not allowed", status_code=406)
+		if self.scope["method"] not in self.methods:
+			response = PlainTextResponse("Method not allowed", status_code = 406)
+			await response(receive, send)
 
 		url_split = self.request.url.path.split(r"/")
 		file_name = url_split.pop(-1)
 
-		response = FileResponse(
-			file_name = file_name,
-			path = "/".join(url_split)
-		)
-		await response(receive, send)
+		try:
+			response = FileResponse(
+				file_name = file_name,
+				path = "/".join(url_split)
+			)
+			await response(receive, send)
+		except RuntimeError:
+			response = self.not_fount(self.scope)
+			await response(receive, send)
