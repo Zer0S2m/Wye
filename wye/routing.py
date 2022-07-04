@@ -72,7 +72,7 @@ class Path(Route):
 		scope: Scope
 	) -> ASGIInstance:
 		if self.methods and scope["method"] not in self.methods:
-			return Response("Method not allowed", 406, media_type="text/plain")
+			return Response("Method not allowed", 406, media_type = "text/plain")
 
 		return self.app(scope)
 

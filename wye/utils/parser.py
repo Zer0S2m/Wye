@@ -1,7 +1,6 @@
 from typing import (
 	Tuple, Union
 )
-import os
 import re
 import pathlib
 from pathlib import Path
