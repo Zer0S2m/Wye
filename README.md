@@ -150,8 +150,16 @@ async def home(request):
 	return PlainTextResponse("home")
 
 
+@app.route(
+    "/test",
+    response_class = PlainTextResponse
+)
+async def test(request):
+	return "home"
+
+
 @app.route("/about")
-async def home(request):
+async def about(request):
 	return FileResponse("about.pdf")
 ```
 
@@ -159,11 +167,16 @@ async def home(request):
 
 1) `.add_route(path, func, methods=["GET"])` - добавить маршрут
 Функция должна принимать параметр `request` и возвращать `Response`, *example*:
-`func(request, **kwargs) -> responce`
+`func(request, **kwargs) -> response`
 
-2) `.route(path)` - Добавить маршрут
-Функция должна принимать параметр `request` и возвращать `Response`, *example*:
-`func(request, **kwargs) -> responce`
+2) `.route(path, *, response_class)` - Добавить маршрут
+Функция должна принимать параметр `request` и возвращать `Optional[Response]`, *example*:
+`func(request, **kwargs) -> Optional[response]`
+Формат `декоратор`
+
+    Аргументы:
+    - `path: str` - путь
+    - `response_class: Type[Response]` - класс ответа
 
 3) `.mount(path)` - Монтировать приложение `Wye`
 

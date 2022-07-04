@@ -1,11 +1,13 @@
 from typing import (
-	List, Optional
+	List, Optional, Type,
+	Union
 )
 import inspect
 
 from wye.routing import (
 	Path, Router
 )
+from wye.response import Response
 from wye.types import (
 	ASGIApp, ASGIInstance, Scope,
 	Send, Receive
@@ -17,7 +19,10 @@ from wye.utils.control import (
 from wye.errors import ErrorPrefix
 
 
-def request_response(func):
+def request_response(
+	func,
+	response_class: Union[Type[Response], None] = None
+):
 	is_coroutine = inspect.iscoroutinefunction(func)
 
 	def app(scope: Scope):
@@ -26,11 +31,14 @@ def request_response(func):
 			kwargs = scope.get("kwargs", {})
 
 			if is_coroutine:
-				responce = await func(request, **kwargs)
+				response = await func(request, **kwargs)
 			else:
-				responce = func(request, **kwargs)
+				response = func(request, **kwargs)
 
-			await responce(receive, send)
+			if response_class:
+				response = response_class(response)
+
+			await response(receive, send)
 
 		return awaitable
 
@@ -63,20 +71,35 @@ class Wye:
 		self,
 		path: str,
 		route: ASGIApp,
-		methods: Optional[List[str]] = None
+		methods: Optional[List[str]] = None,
+		response_class: Union[Type[Response], None] = None
 	) -> None:
 		if methods is None:
 			methods = ["GET"]
 
-		obj = Path(path, request_response(route), protocol = "http", methods = methods)
+		obj = Path(
+			path = path,
+			app = request_response(
+				func = route,
+				response_class = response_class
+			),
+			protocol = "http",
+			methods = methods
+		)
 		self.router.routes.append(obj)
 
 	def route(
 		self,
-		path: str
+		path: str,
+		*,
+		response_class: Union[Type[Response], None] = None
 	):
 		def decorator(func):
-			self.add_route(path, func)
+			self.add_route(
+				path = path,
+				route = func,
+				response_class = response_class
+			)
 
 		return decorator
 
