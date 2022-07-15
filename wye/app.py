@@ -17,6 +17,7 @@ from wye.utils.control import (
 	check_prefix_start, check_prefix_end
 )
 from wye.errors import ErrorPrefix
+from wye.state import State
 
 
 def request_response(
@@ -50,6 +51,7 @@ class Wye:
 		self
 	) -> None:
 		self.router = Router(routes = [])
+		self.state = State()
 
 	def mount(
 		self,
