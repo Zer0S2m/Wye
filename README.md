@@ -218,6 +218,47 @@ async def home(request):
     return PlainTextResponse("home")
 ```
 
+---
+
+Разбор следующей файловой структуры:
+```
+📦 main_app
+ ┣ 📜 __init____.py
+ ┣ 📜 app.py
+ ┣ 📂 app_search
+ ┃ ┃ ┣ 📜 __init__.py
+ ┃ ┃ ┣ 📜 app.py
+ ┃ ┃ ┗ ...
+ ┃ ┗ ...
+ ┗ ...
+```
+
+файл `📦 main_app > 📂 app_search > 📜 app.py`
+```python
+from wye import (
+    Wye, StaticFiles
+)
+
+
+app = Wye()
+app.mount("/static", StaticFiles("static"))
+```
+
+файл `📦 main_app > 📜 app.py`
+```python
+from wye import (
+    Wye, StaticFiles
+)
+
+from app_search.app import app as app_search
+
+
+app = Wye()
+app.mount("/app_search", app_search)
+```
+
+При монтирование приложений, в которых находятся приложение `StaticFiles` лучше указывать путь названием таким, которое содержит сама папка, в данном случае `app_search`. Так `Wye` поймёт где искать файл
+
 ### Request
 
 Запрос, который принимет ваш обработчик:
