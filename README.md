@@ -147,7 +147,7 @@ app = Wye()
 
 @app.route("/")
 async def home(request):
-	return PlainTextResponse("home")
+    return PlainTextResponse("home")
 
 
 @app.route(
@@ -155,12 +155,12 @@ async def home(request):
     response_class = PlainTextResponse
 )
 async def test(request):
-	return "home"
+    return "home"
 
 
 @app.route("/about")
 async def about(request):
-	return FileResponse("about.pdf")
+    return FileResponse("about.pdf")
 ```
 
 #### Methods
@@ -180,6 +180,26 @@ async def about(request):
 
 3) `.mount(path)` - Монтировать приложение `Wye`
 
+#### State
+
+Каждое приложение `Wye` имеет свое глобальное состояние. Получить его вы можете следующим образом:
+```python
+from wye import Wye
+
+
+app = Wye()
+app.state
+```
+
+Получение значений из состояния двумя способами:
+1) `app.state("example_key", None)`
+2) `app.state["example_key"]`
+
+##### Methods
+1) `.set(key: str, value: Any)` - добавить параметр в состояние. Выбрасывает исключение если ключ уже присуствует в хранилище
+2) `.get(key: str, default: Any)` - получить значение из состояния
+3) `.update(key: str, value: Any)` - обновить параметр в хранилище
+
 ### StaticFiles
 ```python
 from wye import (
@@ -195,8 +215,49 @@ app.mount("/example", app = StaticFiles(directory = "example"))
 
 @app.route("/")
 async def home(request):
-	return PlainTextResponse("home")
+    return PlainTextResponse("home")
 ```
+
+---
+
+Разбор следующей файловой структуры:
+```
+📦 main_app
+ ┣ 📜 __init____.py
+ ┣ 📜 app.py
+ ┣ 📂 app_search
+ ┃ ┃ ┣ 📜 __init__.py
+ ┃ ┃ ┣ 📜 app.py
+ ┃ ┃ ┗ ...
+ ┃ ┗ ...
+ ┗ ...
+```
+
+файл `📦 main_app > 📂 app_search > 📜 app.py`
+```python
+from wye import (
+    Wye, StaticFiles
+)
+
+
+app = Wye()
+app.mount("/static", StaticFiles("static"))
+```
+
+файл `📦 main_app > 📜 app.py`
+```python
+from wye import (
+    Wye, StaticFiles
+)
+
+from app_search.app import app as app_search
+
+
+app = Wye()
+app.mount("/app_search", app_search)
+```
+
+При монтирование приложений, в которых находятся приложение `StaticFiles` лучше указывать путь названием таким, которое содержит сама папка, в данном случае `app_search`. Так `Wye` поймёт где искать файл
 
 ### Request
 
