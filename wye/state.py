@@ -4,9 +4,7 @@ from wye.errors import ErrorSetParamState
 
 
 class State:
-	def __init__(
-		self
-	) -> None:
+	def __init__(self) -> None:
 		self._dict = {}
 
 	def get(
@@ -41,6 +39,12 @@ class State:
 
 		self._dict[key] = value
 		return self[key]
+
+	def _set_config_in_state(
+		self,
+		data: dict
+	) -> None:
+		self._dict.update(data)
 
 	def __getitem__(
 		self,
