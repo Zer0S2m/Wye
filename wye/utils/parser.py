@@ -1,8 +1,10 @@
 from typing import (
-	Tuple, Union
+	Tuple, Union, Optional
 )
 import re
+import ast
 import pathlib
+import configparser
 from pathlib import Path
 
 from wye.types import Scope
@@ -62,3 +64,25 @@ def create_path(
 		)
 
 	return Path(pathlib.Path.cwd(), *parts_path)
+
+
+def parser_config_ini(
+	path: Optional[str] = None
+) -> dict:
+	config = {}
+
+	if not path:
+		return config
+
+	parser = configparser.ConfigParser()
+	parser.read(path)
+
+	for section in parser:
+		config[section] = {}
+
+		for key, value in parser.items(section):
+			config[section][key] = ast.literal_eval(value)
+
+	del config["DEFAULT"]
+
+	return config
