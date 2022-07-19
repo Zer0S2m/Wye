@@ -1,6 +1,6 @@
 from wye.response import (
 	Response, PlainTextResponse, HTMLResponse,
-	JSONResponse, FileResponse
+	JSONResponse, FileResponse, StreamingResponse
 )
 from wye.routing import (
 	Route, Router, Path
@@ -20,6 +20,7 @@ __all__ = [
 	"PlainTextResponse",
 	"HTMLResponse",
 	"JSONResponse",
+	"StreamingResponse",
 	"Route",
 	"Router",
 	"Path",
