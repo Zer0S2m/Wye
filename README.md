@@ -81,9 +81,31 @@ class App:
         await response(receive, send)
 ```
 
+### StreamingResponse
+
+Принимает какой-то генератор и возвращает данные в формате который вы укажите
+
+```python
+from wye import StreamingResponse
+
+
+async def generator():
+    for num int range(1, 11):
+        yield str(num)
+
+
+class App:
+    def __init__(self, scope) -> None:
+        self.scope = scope
+
+    async def __call__(self, receive, send):
+        response = StreamingResponse(generator, media_type = "text/plain")
+        await response(receive, send)
+```
+
 ### FileResponse
 
-Принимает название файла и возвращает файд
+Принимает название файла и возвращает файл
 
 ```python
 from wye import FileResponse
