@@ -90,7 +90,7 @@ from wye import StreamingResponse
 
 
 async def generator():
-    for num int range(1, 11):
+    for num in range(1, 11):
         yield str(num)
 
 
