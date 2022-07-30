@@ -81,9 +81,31 @@ class App:
         await response(receive, send)
 ```
 
+### StreamingResponse
+
+Принимает какой-то генератор и возвращает данные в формате который вы укажите
+
+```python
+from wye import StreamingResponse
+
+
+async def generator():
+    for num in range(1, 11):
+        yield str(num)
+
+
+class App:
+    def __init__(self, scope) -> None:
+        self.scope = scope
+
+    async def __call__(self, receive, send):
+        response = StreamingResponse(generator, media_type = "text/plain")
+        await response(receive, send)
+```
+
 ### FileResponse
 
-Принимает название файла и возвращает файд
+Принимает название файла и возвращает файл
 
 ```python
 from wye import FileResponse
@@ -180,25 +202,37 @@ async def about(request):
 
 3) `.mount(path)` - Монтировать приложение `Wye`
 
-#### State
+#### Args
 
-Каждое приложение `Wye` имеет свое глобальное состояние. Получить его вы можете следующим образом:
+1) `config` *(`str`)* - название файла конфигурации *(будет искать в корневом каталоге вашего проекта)*
+Все данные прочитанные из файла будут записываться в глобальный стейт приложения `Wye`
+
+Пример:
+
+```
+📦 main_app
+ ┣ 📜 app.py
+ ┗ 📜 config.ini
+```
+
+```ini
+[example]
+example_1 = 10
+example_2 = False
+example_3 = "example"
+example_4 = 3.14
+
+[default]
+example_1 = ["example", "example", "example"]
+```
+
 ```python
 from wye import Wye
 
 
-app = Wye()
-app.state
+app = Wye(config = "config.ini")
+app.state["example"]["example_1"]
 ```
-
-Получение значений из состояния двумя способами:
-1) `app.state("example_key", None)`
-2) `app.state["example_key"]`
-
-##### Methods
-1) `.set(key: str, value: Any)` - добавить параметр в состояние. Выбрасывает исключение если ключ уже присуствует в хранилище
-2) `.get(key: str, default: Any)` - получить значение из состояния
-3) `.update(key: str, value: Any)` - обновить параметр в хранилище
 
 ### StaticFiles
 ```python
@@ -218,12 +252,10 @@ async def home(request):
     return PlainTextResponse("home")
 ```
 
----
-
 Разбор следующей файловой структуры:
 ```
 📦 main_app
- ┣ 📜 __init____.py
+ ┣ 📜 __init__.py
  ┣ 📜 app.py
  ┣ 📂 app_search
  ┃ ┃ ┣ 📜 __init__.py
@@ -238,8 +270,6 @@ async def home(request):
 from wye import (
     Wye, StaticFiles
 )
-
-
 app = Wye()
 app.mount("/static", StaticFiles("static"))
 ```
@@ -249,10 +279,7 @@ app.mount("/static", StaticFiles("static"))
 from wye import (
     Wye, StaticFiles
 )
-
 from app_search.app import app as app_search
-
-
 app = Wye()
 app.mount("/app_search", app_search)
 ```

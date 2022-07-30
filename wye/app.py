@@ -16,6 +16,7 @@ from wye.request import Request
 from wye.utils.control import (
 	check_prefix_start, check_prefix_end
 )
+from wye.utils.parser import parser_config_ini
 from wye.errors import ErrorPrefix
 from wye.state import State
 
@@ -48,10 +49,15 @@ def request_response(
 
 class Wye:
 	def __init__(
-		self
+		self,
+		*,
+		config: Optional[str] = None
 	) -> None:
 		self.router = Router(routes = [])
 		self.state = State()
+
+		self.__config_data = parser_config_ini(config)
+		self.__set_config_in_state()
 
 	def mount(
 		self,
@@ -104,6 +110,9 @@ class Wye:
 			)
 
 		return decorator
+
+	def __set_config_in_state(self) -> None:
+		self.state._set_config_in_state(self.__config_data)
 
 	def __call__(
 		self,

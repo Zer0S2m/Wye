@@ -86,6 +86,49 @@ class JSONResponse(Response):
 		return json.dumps(content).encode("utf-8")
 
 
+class StreamingResponse(Response):
+	def __init__(
+		self,
+		content: Any,
+		status_code: int = 200,
+		media_type: Optional[str] = None
+	) -> None:
+		self.iterator = content
+		self.status_code = status_code
+
+		if media_type is not None:
+			self.media_type = media_type
+
+		self.init_headers()
+
+	async def __call__(
+		self,
+		receive: Receive,
+		send: Send
+	) -> None:
+		await send({
+			"type": "http.response.start",
+			"status": self.status_code,
+			"headers": self.headers
+		})
+
+		async for body in self.iterator:
+			if not isinstance(body, bytes):
+				body = body.encode(self.charset)
+
+			await send({
+				"type": "http.response.body",
+				"body": body,
+				"more_body": True
+			})
+
+		await send({
+			"type": "http.response.body",
+			"body": b"",
+			"more_body": False
+		})
+
+
 class FileResponse(Response):
 	chunk_size = 4096
 
