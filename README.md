@@ -262,20 +262,39 @@ app.mount("/app_search", app_search)
 ### Request
 
 Запрос, который принимет ваш обработчик:
-
 ```python
 from wye import Request
 ```
 
+Сигнатура: `Request(scope, receive=None)`
+
+#### Property
+
 1) `Request.url` - получить url, по которому был запрос
 2) `Request.method` - получить метод
 3) `Request.query_params` - получить данные строки запросы
+
+#### Methods
+
+1) `await Request.body()` - Тело запроса в байтах
+2) `await Request.json()` - Тело запроса, проанализированное как `JSON`
+
+Вы также можете получить данные через `async for`:
+```python
+async def app(receive, send):
+    request = Request(scope, receive)
+    body = b''
+    async for chunk in request.stream():
+        body += chunk
+```
 
 ### URL
 
 ```python
 from wye import URL
 ```
+
+Сигнатура: `URL(url: str | bytes)`
 
 1) `Request.url` - получить url, по которому был запрос
 2) `Request.url.query_string` - получить строку запроса
@@ -289,6 +308,8 @@ from wye import URL
 from wye import Headers
 ```
 
+Сигнатура: `Headers(raw_headers = None)`
+
 1) `Request.headers` - получить Headers
 2) `Request.headers.values()` - получить значения
 3) `Request.headers.keys()` - получить ключи
@@ -300,6 +321,8 @@ from wye import Headers
 ```python
 from wye import QueryParams
 ```
+
+Сигнатура: `Headers(raw_params = None)`
 
 1) `Request.query_params` - получить QueryParams
 2) `Request.query_params.values()` - получить значения

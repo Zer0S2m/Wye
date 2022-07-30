@@ -18,3 +18,7 @@ class ErrorSetParamState(Exception):
 
 	def __str__(self) -> str:
 		return self.message
+
+
+class ErrorDisconnect(Exception):
+	pass
