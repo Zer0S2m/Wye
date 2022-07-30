@@ -29,7 +29,7 @@ def request_response(
 
 	def app(scope: Scope):
 		async def awaitable(receive: Receive, send: Send):
-			request = Request(scope = scope)
+			request = Request(scope = scope, receive = receive)
 			kwargs = scope.get("kwargs", {})
 
 			if is_coroutine:

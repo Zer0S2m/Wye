@@ -1,16 +1,24 @@
-from wye.types import Scope
+import json
+
+from wye.types import (
+	Scope, Receive
+)
 from wye.utils.parser import create_url
 from wye.datastructures import (
 	URL, Headers, QueryParams
 )
+from wye.errors import ErrorDisconnect
 
 
 class Request:
 	def __init__(
 		self,
-		scope: Scope
+		scope: Scope,
+		receive: Receive
 	) -> None:
 		self._scope = scope
+		self._receive = receive
+		self._body = b""
 
 	@property
 	def method(self) -> str:
@@ -36,3 +44,22 @@ class Request:
 			self._headers = Headers(self._scope["headers"])
 
 		return self._headers
+
+	async def stream(self):
+		while True:
+			message = await self._receive()
+			if message["type"] == "http.request":
+				yield message.get("body", b"")
+				if not message.get("more_body", False):
+					break
+			elif message["type"] == "http.disconnect":
+				raise ErrorDisconnect()
+
+	async def body(self):
+		if not getattr(self, "_body"):
+			async for chunk in self.stream():
+				self._body += chunk
+		return self._body
+
+	async def json(self):
+		return json.loads(await self.body())
