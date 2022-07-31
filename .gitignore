@@ -26,6 +26,7 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+static/
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
@@ -42,3 +43,8 @@ venv.bak/
 # custom
 media/
 .vscode
+wye_serializers.egg-info/
+
+# build
+build
+dist
