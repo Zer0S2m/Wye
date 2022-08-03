@@ -36,3 +36,7 @@ class STR(BaseField):
 
 class FLOAT(BaseField):
 	__type__ = float
+
+
+class BOOL(BaseField):
+	__type__ = bool
