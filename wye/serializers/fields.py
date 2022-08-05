@@ -5,6 +5,8 @@ from typing import (
 
 ALIAS = "ALIAS"
 TYPE = "TYPE"
+DEFAULT = "DEFAULT"
+REQUIRED = "REQUIRED"
 
 
 class BaseField:
@@ -12,19 +14,28 @@ class BaseField:
 
 	def __init__(
 		self,
+		default: Any = None,
 		alias: Optional[str] = None
 	) -> None:
+		self._default = default
 		self._alias = alias
+		self._required = True
 
 	def _build_rules(self) -> Dict[str, Any]:
-		obj = {}
-		obj[TYPE] = self.__type__
-		obj[ALIAS] = self._alias
+		rules = {}
+		rules[TYPE] = self.__type__
+		rules[ALIAS] = self._alias
+		rules[DEFAULT] = self._default
+		rules[REQUIRED] = self._required
 
-		return obj
+		return rules
 
 	@property
-	def alias(self):
+	def default(self) -> Any:
+		return self._default
+
+	@property
+	def alias(self) -> str:
 		return self._alias
 
 	@alias.setter
@@ -32,6 +43,14 @@ class BaseField:
 		if not value:
 			raise ValueError("No 'alias'")
 		self._alias = value
+
+	@property
+	def required(self) -> bool:
+		return self._required
+
+	@required.setter
+	def required(self, value: bool):
+		self._required = value
 
 	def __call__(self) -> Any:
 		return self._build_rules()
