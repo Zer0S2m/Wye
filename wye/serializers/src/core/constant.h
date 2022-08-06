@@ -1,6 +1,6 @@
 int SetValidationError();
 int SetAttributeError();
-void *SetDefaultValue(PyObject *json, PyObject *rules);
+void *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title);
 int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
 

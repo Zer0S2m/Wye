@@ -1,4 +1,3 @@
-from types import NoneType
 from typing import (
 	get_args, get_origin, Dict,
 	Any, Union
@@ -7,6 +6,9 @@ from typing import (
 from wye.serializers.fields import (
 	ALIAS, REQUIRED
 )
+
+
+NoneType = type(None)
 
 
 class BaseSerializer:

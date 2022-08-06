@@ -15,14 +15,20 @@ int SetAttributeError() {
 }
 
 
-void *SetDefaultValue(PyObject *json, PyObject *rules) {
-    return NULL;
+void *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
+    PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
+    if (default_value != Py_None) {
+        PyDict_SetItem(obj, param_title, default_value);
+    }
 }
 
 
 int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required) {
     if (!json_field && PyObject_IsTrue(is_required)) {
         return SetAttributeError();
+    }
+    if (!json_field) {
+        return 1;
     }
     if (!PyObject_IsInstance(json_field, type)) {
         return SetValidationError();
@@ -50,10 +56,12 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
         if (!CheckField(json_field, type, is_required))
             return NULL;
 
-        if (!json_field)
-            continue;
-
         PyObject *alias = PyDict_GetItemString(param_rule, ALIAS_FIELD_KEY);
+
+        if (!json_field) {
+            SetDefaultValue(obj, param_rule, alias);
+            continue;
+        }
 
         PyDict_SetItem(obj, alias, json_field);
     }
