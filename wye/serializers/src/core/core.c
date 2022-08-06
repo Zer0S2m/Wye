@@ -4,20 +4,42 @@
 #include <core/constant.h>
 
 
-void *SetValidationError() {
+int SetValidationError() {
     PyErr_SetString(PyExc_TypeError, "<WyeSerializers>: Validation error");
-    return NULL;
+    return 0;
 }
 
-void *SetAttributeError() {
+int SetAttributeError() {
     PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Missing required parameters");
-    return NULL;
+    return 0;
+}
+
+
+void *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
+    PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
+    if (default_value != Py_None) {
+        PyDict_SetItem(obj, param_title, default_value);
+    }
+}
+
+
+int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required) {
+    if (!json_field && PyObject_IsTrue(is_required)) {
+        return SetAttributeError();
+    }
+    if (!json_field) {
+        return 1;
+    }
+    if (!PyObject_IsInstance(json_field, type)) {
+        return SetValidationError();
+    }
+    return 1;
 }
 
 
 static PyObject *method_build_json(PyObject *self, PyObject *args) {
     PyObject *obj = PyDict_New();
-    PyObject *json, *rules = NULL;
+    PyObject *json, *rules;
 
     if (!PyArg_ParseTuple(args, "OO", &json, &rules)) {
         return NULL;
@@ -27,17 +49,19 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     for (int index_param_rule = 0; index_param_rule < PyList_Size(params_rules); index_param_rule++) {
         PyObject *param_title = PyList_GetItem(params_rules, index_param_rule);
         PyObject *param_rule = PyDict_GetItem(rules, param_title);
+        PyObject *json_field = PyDict_GetItem(json, param_title);
 
         PyObject *type = PyDict_GetItemString(param_rule, TYPE_FIELD_KEY);
-        PyObject *json_field = PyDict_GetItem(json, param_title);
-        if (!json_field) {
-            return SetAttributeError();
-        }
-        if (!PyObject_IsInstance(json_field, type)) {
-            return SetValidationError();
-        }
+        PyObject *is_required = PyDict_GetItemString(param_rule, REQUIRED_FIELD_KEY);
+        if (!CheckField(json_field, type, is_required))
+            return NULL;
 
         PyObject *alias = PyDict_GetItemString(param_rule, ALIAS_FIELD_KEY);
+
+        if (!json_field) {
+            SetDefaultValue(obj, param_rule, alias);
+            continue;
+        }
 
         PyDict_SetItem(obj, alias, json_field);
     }
