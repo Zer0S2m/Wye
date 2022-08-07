@@ -84,7 +84,9 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
             PyObject *raw_json = PyList_GetItem(json, in_json);
 
             for (int index_param_rule = 0; index_param_rule < PyList_Size(params_rules); index_param_rule++) {
-                BuildJson(ready_json, raw_json, params_rules, rules, index_param_rule);
+                if (!BuildJson(ready_json, raw_json, params_rules, rules, index_param_rule)) {
+                    return NULL;
+                }
             }
 
             PyList_Append(list_json, ready_json);
@@ -95,7 +97,9 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
 
     PyObject *obj = PyDict_New();
     for (int index_param_rule = 0; index_param_rule < PyList_Size(params_rules); index_param_rule++) {
-        BuildJson(obj, json, params_rules, rules, index_param_rule);
+        if (!BuildJson(obj, json, params_rules, rules, index_param_rule)) {
+            return NULL;
+        }
     }
 
     return obj;
