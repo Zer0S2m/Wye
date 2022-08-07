@@ -37,8 +37,36 @@ int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required) {
 }
 
 
+int BuildJson(
+    PyObject *obj,
+    PyObject *json,
+    PyObject *params_rules,
+    PyObject *rules,
+    int index_param_rule
+) {
+    PyObject *param_title = PyList_GetItem(params_rules, index_param_rule);
+    PyObject *param_rule = PyDict_GetItem(rules, param_title);
+    PyObject *json_field = PyDict_GetItem(json, param_title);
+
+    PyObject *type = PyDict_GetItemString(param_rule, TYPE_FIELD_KEY);
+    PyObject *is_required = PyDict_GetItemString(param_rule, REQUIRED_FIELD_KEY);
+    if (!CheckField(json_field, type, is_required))
+        return NULL;
+
+    PyObject *alias = PyDict_GetItemString(param_rule, ALIAS_FIELD_KEY);
+
+    if (!json_field) {
+        SetDefaultValue(obj, param_rule, alias);
+        return 1;
+    }
+
+    PyDict_SetItem(obj, alias, json_field);
+
+    return 1;
+}
+
+
 static PyObject *method_build_json(PyObject *self, PyObject *args) {
-    PyObject *obj = PyDict_New();
     PyObject *json, *rules;
 
     if (!PyArg_ParseTuple(args, "OO", &json, &rules)) {
@@ -46,24 +74,28 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     }
 
     PyObject *params_rules = PyDict_Keys(rules);
-    for (int index_param_rule = 0; index_param_rule < PyList_Size(params_rules); index_param_rule++) {
-        PyObject *param_title = PyList_GetItem(params_rules, index_param_rule);
-        PyObject *param_rule = PyDict_GetItem(rules, param_title);
-        PyObject *json_field = PyDict_GetItem(json, param_title);
 
-        PyObject *type = PyDict_GetItemString(param_rule, TYPE_FIELD_KEY);
-        PyObject *is_required = PyDict_GetItemString(param_rule, REQUIRED_FIELD_KEY);
-        if (!CheckField(json_field, type, is_required))
-            return NULL;
+    if (PyList_Check(json)) {
+        int length_list_json = PyList_Size(json);
+        PyObject *list_json = PyList_New(0);
 
-        PyObject *alias = PyDict_GetItemString(param_rule, ALIAS_FIELD_KEY);
+        for (int in_json = 0; in_json < length_list_json; in_json++) {
+            PyObject *ready_json = PyDict_New();
+            PyObject *raw_json = PyList_GetItem(json, in_json);
 
-        if (!json_field) {
-            SetDefaultValue(obj, param_rule, alias);
-            continue;
+            for (int index_param_rule = 0; index_param_rule < PyList_Size(params_rules); index_param_rule++) {
+                BuildJson(ready_json, raw_json, params_rules, rules, index_param_rule);
+            }
+
+            PyList_Append(list_json, ready_json);
         }
 
-        PyDict_SetItem(obj, alias, json_field);
+        return list_json;
+    }
+
+    PyObject *obj = PyDict_New();
+    for (int index_param_rule = 0; index_param_rule < PyList_Size(params_rules); index_param_rule++) {
+        BuildJson(obj, json, params_rules, rules, index_param_rule);
     }
 
     return obj;
