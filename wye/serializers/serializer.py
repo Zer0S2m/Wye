@@ -16,6 +16,27 @@ class BaseSerializer:
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
 
+	def is_validate(
+		self,
+		json: Union[Dict[str, Any], List[Dict[str, Any]]],
+		alias: bool = True
+	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
+		rules = self._set_alias_rules(alias)
+		is_valid, obj = wye_serializers.is_validate(json, rules)
+		return (is_valid, obj)
+
+	def _set_alias_rules(
+		self,
+		alias: bool
+	) -> Dict[str, Any]:
+		if not alias:
+			return self._rules
+
+		obj = {}
+		for _, rule in self._rules.items():
+			obj[rule[ALIAS]] = rule
+		return obj
+
 	def _build_rules(self) -> Dict[str, Any]:
 		rules = {}
 
@@ -38,13 +59,6 @@ class BaseSerializer:
 					new_rule = {}
 					new_rule[REQUIRED] = False
 					rules_one_field.update(new_rule)
-
-	def is_validate(
-		self,
-		json: Union[Dict[str, Any], List[Dict[str, Any]]]
-	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
-		is_valid, obj = wye_serializers.is_validate(json, self._rules)
-		return (is_valid, obj)
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
