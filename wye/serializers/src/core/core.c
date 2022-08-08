@@ -106,12 +106,35 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *method_is_validate(PyObject *self, PyObject *args) {
+    PyObject *obj = method_build_json(self, args);
+    PyObject *list_err_obj = PyList_New(0);
+    PyErr_Clear();
+
+    if (!obj) {
+        PyList_Append(list_err_obj, Py_False);
+        PyList_Append(list_err_obj, Py_None);
+    } else {
+        PyList_Append(list_err_obj, Py_True);
+        PyList_Append(list_err_obj, obj);
+    }
+
+    return list_err_obj;
+}
+
+
 static PyMethodDef WyeSerializersMethods[] = {
     {
         "build_json",
         method_build_json,
         METH_VARARGS,
         "Collects json according to the rules"
+    },
+    {
+        "is_validate",
+        method_is_validate,
+        METH_VARARGS,
+        "Validate objects"
     },
     { NULL, NULL, 0, NULL }
 };
