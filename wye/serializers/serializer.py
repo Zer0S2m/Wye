@@ -1,11 +1,12 @@
 from typing import (
-	get_args, get_origin, Dict,
-	Any, Union
+	Tuple, get_args, get_origin, Dict,
+	Any, Union, List
 )
 
 from wye.serializers.fields import (
 	ALIAS, REQUIRED
 )
+import wye_serializers
 
 
 NoneType = type(None)
@@ -14,6 +15,27 @@ NoneType = type(None)
 class BaseSerializer:
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
+
+	def is_validate(
+		self,
+		json: Union[Dict[str, Any], List[Dict[str, Any]]],
+		alias: bool = True
+	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
+		rules = self._set_alias_rules(alias)
+		is_valid, obj = wye_serializers.is_validate(json, rules)
+		return (is_valid, obj)
+
+	def _set_alias_rules(
+		self,
+		alias: bool
+	) -> Dict[str, Any]:
+		if not alias:
+			return self._rules
+
+		obj = {}
+		for _, rule in self._rules.items():
+			obj[rule[ALIAS]] = rule
+		return obj
 
 	def _build_rules(self) -> Dict[str, Any]:
 		rules = {}
