@@ -1,7 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 
 #include <Python.h>
-#include <core/constant.h>
+#include <core/core.h>
 
 
 int SetValidationError() {
@@ -14,12 +14,25 @@ int SetAttributeError() {
     return 0;
 }
 
+int SetValidationDefaultError() {
+    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Validation error: default value");
+    return 0;
+}
 
-void *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
+
+int *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
     PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
+    PyObject *type = PyDict_GetItemString(rules, TYPE_FIELD_KEY);
+
+    if (!PyObject_IsInstance(default_value, type)) {
+        return SetValidationDefaultError();
+    }
+
     if (default_value != Py_None) {
         PyDict_SetItem(obj, param_title, default_value);
     }
+
+    return 1;
 }
 
 
@@ -50,13 +63,16 @@ int BuildJson(
 
     PyObject *type = PyDict_GetItemString(param_rule, TYPE_FIELD_KEY);
     PyObject *is_required = PyDict_GetItemString(param_rule, REQUIRED_FIELD_KEY);
-    if (!CheckField(json_field, type, is_required))
+    if (!CheckField(json_field, type, is_required)) {
         return NULL;
+    }
 
     PyObject *alias = PyDict_GetItemString(param_rule, ALIAS_FIELD_KEY);
 
     if (!json_field) {
-        SetDefaultValue(obj, param_rule, alias);
+        if (!SetDefaultValue(obj, param_rule, alias)) {
+            return NULL;
+        }
         return 1;
     }
 

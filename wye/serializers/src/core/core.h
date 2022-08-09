@@ -1,6 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
 int SetValidationError();
 int SetAttributeError();
-void *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title);
+int SetValidationDefaultError();
+int *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title);
 int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required);
 int BuildJson(
     PyObject *obj, PyObject *json, PyObject *params_rules, PyObject *rules, int index_param_rule
