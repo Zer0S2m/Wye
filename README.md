@@ -402,3 +402,9 @@ from wye.serializers import fields
 - `fields.STR` - Строка
 - `fields.INT` - Целочисленное число
 - `fields.FLOAT` - Число с плавающей точкой
+- `fields.LIST` - Булевое значение
+- `fields.SET` - Множество
+- `fields.TUPLE` - Кортеж
+- `fields.DICT` - словарь
+- `fields.FROZENSET` - Неизменяемое множество
+- `fields.BYTES` - байты
