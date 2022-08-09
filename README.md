@@ -215,6 +215,7 @@ async def about(request):
  ┗ 📜 config.ini
 ```
 
+`📜 config.ini`:
 ```ini
 [example]
 example_1 = 10
@@ -226,6 +227,7 @@ example_4 = 3.14
 example_1 = ["example", "example", "example"]
 ```
 
+`📜 app.py`:
 ```python
 from wye import Wye
 
@@ -356,3 +358,47 @@ from wye import QueryParams
 3) `Request.query_params.keys()` - получить ключи
 4) `Request.query_params.items()` - получить список паметры строки
 5) `Request.query_params.get(key)` - получить параметр строки `(название, значение)`
+
+## Serializers
+
+`src` - `wye/serializers`
+
+### Schemas
+
+```python
+from wye.serializers import Serializer
+```
+
+Пример:
+```python
+import typing
+
+from wye.serializers import Serializer
+from wye.serializers import fields
+
+
+class Serializer_1(Serializer):
+    param_1: typing.Optional[int] = fields.INT(default = 10, alias = "param1")
+    param_2: str = fields.STR(alias = "param2")
+    param_3: float = fields.FLOAT()
+    param_4: bool = fields.BOOL(alias = "param4")
+```
+
+Методы:
+- `is_validate(json: Union[Dict[str, Any], List[Dict[str, Any]]], alias: bool = True)` - Провалидировать обьекты. `alias` добавить проверку по ключам, по умолчанию `True`. Возвращает `Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]`
+
+### Fields
+
+```python
+from wye.serializers import fields
+```
+
+Следующие аргументы:
+- `default: Any` - Дефолтное значение, работает если поле необязательное (`param_1: Optional[int]`), по умолчанию `None`
+- `alias: str` - публичное имя поля, по умолчанию `None`
+
+Типы:
+- `fields.BOOL` - Булевое значение
+- `fields.STR` - Строка
+- `fields.INT` - Целочисленное число
+- `fields.FLOAT` - Число с плавающей точкой
