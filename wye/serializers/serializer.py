@@ -1,10 +1,12 @@
 from typing import (
-	Tuple, get_args, get_origin, Dict,
-	Any, Union, List
+	get_args, get_origin, Dict,
+	Any, Union, List,
+	Tuple, Type, _GenericAlias
 )
 
 from wye.serializers.fields import (
-	ALIAS, REQUIRED
+	ALIAS, REQUIRED, ELEMENT_TYPE,
+	EXPANDED_RULES
 )
 import wye_serializers
 
@@ -12,7 +14,19 @@ import wye_serializers
 NoneType = type(None)
 
 
-class BaseSerializer:
+class BaseListSerializer:
+	def _build_rules_list(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		if isinstance(get_origin(type_field), list):
+			rule[EXPANDED_RULES].update({
+				f"{ELEMENT_TYPE}": get_args(type_field)[0]
+			})
+
+
+class BaseSerializer(BaseListSerializer):
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
 
@@ -45,12 +59,13 @@ class BaseSerializer:
 			if not rules[param][ALIAS]:
 				rules[param][ALIAS] = param
 			self.__set_required_field(rules[param], type_)
+			self._build_rules_list(rules[param], type_)
 
 		return rules
 
 	def __set_required_field(
 		self,
-		rules_one_field: Dict[str, Any],
+		rule: Dict[str, Any],
 		type_field: Any
 	) -> None:
 		if get_origin(type_field) is Union:
@@ -58,7 +73,7 @@ class BaseSerializer:
 				if type_ == NoneType:
 					new_rule = {}
 					new_rule[REQUIRED] = False
-					rules_one_field.update(new_rule)
+					rule.update(new_rule)
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
