@@ -73,3 +73,27 @@ class FLOAT(BaseField):
 
 class BOOL(BaseField):
 	__type__ = bool
+
+
+class LIST(BaseField):
+	__type__ = list
+
+
+class TUPLE(BaseField):
+	__type__ = tuple
+
+
+class SET(BaseField):
+	__type__ = set
+
+
+class DICT(BaseField):
+	__type__ = dict
+
+
+class BYTES(BaseField):
+	__type__ = bytes
+
+
+class FROZENSET(BaseField):
+	__type__ = frozenset
