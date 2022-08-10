@@ -20,11 +20,15 @@ int SetValidationDefaultError() {
 }
 
 
-int *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
-    PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
-    PyObject *type = PyDict_GetItemString(rules, TYPE_FIELD_KEY);
+int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title) {
+    PyObject *default_value = PyDict_GetItemString(rule, DEFAULT_FIELD_KEY);
+    PyObject *type = PyDict_GetItemString(rule, TYPE_FIELD_KEY);
 
-    if (!PyObject_IsInstance(default_value, type)) {
+    if (!PyObject_IsInstance(default_value, type) && default_value != Py_None) {
+        return SetValidationDefaultError();
+    }
+
+    if (!CheckExpandedField(default_value, rule)) {
         return SetValidationDefaultError();
     }
 
@@ -36,7 +40,40 @@ int *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
 }
 
 
-int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required) {
+int CheckFieldList(PyObject *json_field, PyObject *rule) {
+    PyObject *expanded_rules = PyDict_GetItemString(rule, EXPANDED_RULES_FIELD_KEY);
+    PyObject *element_type = PyDict_GetItemString(expanded_rules, ARRAY_ELEMENT_TYPE_FIELD_KEY);
+
+    for (int i_element = 0; i_element < PyList_Size(json_field); i_element++) {
+        PyObject *element = PyList_GetItem(json_field, i_element);
+        if (!PyObject_IsInstance(element, element_type)) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+
+int CheckExpandedField(PyObject *json_field, PyObject *rule) {
+    PyObject *is_expanded = PyDict_GetItemString(rule, EXPANDED_FIELD_KEY);
+    if (PyObject_IsTrue(is_expanded)) {
+        PyObject *expanded_rules_for = PyDict_GetItemString(rule, EXPANDED_RULES_FOR_FIELD_KEY);
+        if (PyList_CheckExact(json_field)) {
+            if (!CheckFieldList(json_field, rule)) {
+                return SetValidationError();
+            }
+        }
+    }
+
+    return 1;
+}
+
+
+int CheckField(PyObject *json_field, PyObject *rule) {
+    PyObject *type = PyDict_GetItemString(rule, TYPE_FIELD_KEY);
+    PyObject *is_required = PyDict_GetItemString(rule, REQUIRED_FIELD_KEY);
+
     if (!json_field && PyObject_IsTrue(is_required)) {
         return SetAttributeError();
     }
@@ -46,6 +83,11 @@ int CheckField(PyObject *json_field, PyObject *type, PyObject *is_required) {
     if (!PyObject_IsInstance(json_field, type)) {
         return SetValidationError();
     }
+
+    if (!CheckExpandedField(json_field, rule)) {
+        return NULL;
+    }
+
     return 1;
 }
 
@@ -61,9 +103,7 @@ int BuildJson(
     PyObject *param_rule = PyDict_GetItem(rules, param_title);
     PyObject *json_field = PyDict_GetItem(json, param_title);
 
-    PyObject *type = PyDict_GetItemString(param_rule, TYPE_FIELD_KEY);
-    PyObject *is_required = PyDict_GetItemString(param_rule, REQUIRED_FIELD_KEY);
-    if (!CheckField(json_field, type, is_required)) {
+    if (!CheckField(json_field, param_rule)) {
         return NULL;
     }
 
@@ -135,7 +175,7 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args) {
         PyList_Append(list_err_obj, obj);
     }
 
-    return list_err_obj;
+    return PyList_AsTuple(list_err_obj);
 }
 
 

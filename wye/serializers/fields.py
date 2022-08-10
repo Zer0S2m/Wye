@@ -7,6 +7,12 @@ ALIAS = "ALIAS"
 TYPE = "TYPE"
 DEFAULT = "DEFAULT"
 REQUIRED = "REQUIRED"
+EXPANDED = "EXPANDED"
+EXPANDED_RULES = "EXPANDED_RULES"
+EXPANDED_RULES_FOR = "FOR"
+ELEMENT_TYPE = "ELEMENT_TYPE"
+
+EXPANDED_RULES_LIST = "list"
 
 
 class BaseField:
@@ -27,6 +33,7 @@ class BaseField:
 		rules[ALIAS] = self._alias
 		rules[DEFAULT] = self._default
 		rules[REQUIRED] = self._required
+		rules[EXPANDED] = False
 
 		return rules
 
@@ -52,7 +59,7 @@ class BaseField:
 	def required(self, value: bool):
 		self._required = value
 
-	def __call__(self) -> Any:
+	def __call__(self) -> Dict[str, Any]:
 		return self._build_rules()
 
 	def __repr__(self) -> str:
@@ -77,6 +84,17 @@ class BOOL(BaseField):
 
 class LIST(BaseField):
 	__type__ = list
+
+	def __init__(self, *args, **kwargs) -> None:
+		super().__init__(*args, **kwargs)
+
+	def _build_rules(self) -> Dict[str, Any]:
+		rules = super()._build_rules()
+		rules[EXPANDED] = False
+		rules[EXPANDED_RULES] = {}
+		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_LIST
+
+		return rules
 
 
 class TUPLE(BaseField):

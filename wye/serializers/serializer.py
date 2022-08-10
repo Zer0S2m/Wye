@@ -1,10 +1,12 @@
 from typing import (
-	Tuple, get_args, get_origin, Dict,
-	Any, Union, List
+	get_args, get_origin, Dict,
+	Any, Union, List,
+	Tuple, Type, _GenericAlias
 )
 
 from wye.serializers.fields import (
-	ALIAS, REQUIRED
+	ALIAS, REQUIRED, ELEMENT_TYPE,
+	EXPANDED_RULES, EXPANDED
 )
 import wye_serializers
 
@@ -12,7 +14,22 @@ import wye_serializers
 NoneType = type(None)
 
 
-class BaseSerializer:
+class BaseListSerializer:
+	def _build_rules_list(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		if get_origin(type_field) == list and isinstance(type_field, _GenericAlias):
+			rule.update({
+				f"{EXPANDED}": True
+			})
+			rule[EXPANDED_RULES].update({
+				f"{ELEMENT_TYPE}": get_args(type_field)[0]
+			})
+
+
+class BaseSerializer(BaseListSerializer):
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
 
@@ -22,8 +39,8 @@ class BaseSerializer:
 		alias: bool = True
 	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
 		rules = self._set_alias_rules(alias)
-		is_valid, obj = wye_serializers.is_validate(json, rules)
-		return (is_valid, obj)
+		data = wye_serializers.is_validate(json, rules)
+		return data
 
 	def _set_alias_rules(
 		self,
@@ -44,21 +61,25 @@ class BaseSerializer:
 			rules[param] = self.__class__.__dict__[param]()
 			if not rules[param][ALIAS]:
 				rules[param][ALIAS] = param
-			self.__set_required_field(rules[param], type_)
+			type_ = self.__set_required_field(rules[param], type_)
+			self._build_rules_list(rules[param], type_)
 
 		return rules
 
 	def __set_required_field(
 		self,
-		rules_one_field: Dict[str, Any],
+		rule: Dict[str, Any],
 		type_field: Any
-	) -> None:
+	) -> Type[_GenericAlias]:
 		if get_origin(type_field) is Union:
-			for type_ in get_args(type_field):
+			args = get_args(type_field)
+			for type_ in args:
 				if type_ == NoneType:
 					new_rule = {}
 					new_rule[REQUIRED] = False
-					rules_one_field.update(new_rule)
+					rule.update(new_rule)
+					return args[0]
+		return type_field
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
