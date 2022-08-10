@@ -6,7 +6,7 @@ from typing import (
 
 from wye.serializers.fields import (
 	ALIAS, REQUIRED, ELEMENT_TYPE,
-	EXPANDED_RULES
+	EXPANDED_RULES, EXPANDED
 )
 import wye_serializers
 
@@ -20,7 +20,10 @@ class BaseListSerializer:
 		rule: Dict[str, Any],
 		type_field: Type[_GenericAlias]
 	) -> Dict[str, Any]:
-		if isinstance(get_origin(type_field), list):
+		if get_origin(type_field) == list and isinstance(type_field, _GenericAlias):
+			rule.update({
+				f"{EXPANDED}": True
+			})
 			rule[EXPANDED_RULES].update({
 				f"{ELEMENT_TYPE}": get_args(type_field)[0]
 			})
@@ -36,8 +39,8 @@ class BaseSerializer(BaseListSerializer):
 		alias: bool = True
 	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
 		rules = self._set_alias_rules(alias)
-		is_valid, obj = wye_serializers.is_validate(json, rules)
-		return (is_valid, obj)
+		data = wye_serializers.is_validate(json, rules)
+		return data
 
 	def _set_alias_rules(
 		self,

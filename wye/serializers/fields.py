@@ -90,7 +90,7 @@ class LIST(BaseField):
 
 	def _build_rules(self) -> Dict[str, Any]:
 		rules = super()._build_rules()
-		rules[EXPANDED] = True
+		rules[EXPANDED] = False
 		rules[EXPANDED_RULES] = {}
 		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_LIST
 
