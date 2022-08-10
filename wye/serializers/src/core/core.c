@@ -28,6 +28,10 @@ int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title) {
         return SetValidationDefaultError();
     }
 
+    if (!CheckExpandedField(default_value, rule)) {
+        return SetValidationDefaultError();
+    }
+
     if (default_value != Py_None) {
         PyDict_SetItem(obj, param_title, default_value);
     }
