@@ -79,6 +79,7 @@ class BaseSerializer(BaseListSerializer):
 					new_rule[REQUIRED] = False
 					rule.update(new_rule)
 					return args[0]
+		return type_field
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
