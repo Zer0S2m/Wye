@@ -5,8 +5,9 @@
 int SetValidationError();
 int SetAttributeError();
 int SetValidationDefaultError();
-int *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title);
+int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title);
 int CheckField(PyObject *json_field, PyObject *rule);
+int CheckExpandedField(PyObject *json_field, PyObject *rule);
 int BuildJson(
     PyObject *obj, PyObject *json, PyObject *params_rules, PyObject *rules, int index_param_rule
 );

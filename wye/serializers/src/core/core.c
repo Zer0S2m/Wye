@@ -20,11 +20,11 @@ int SetValidationDefaultError() {
 }
 
 
-int *SetDefaultValue(PyObject *obj, PyObject *rules, PyObject *param_title) {
-    PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
-    PyObject *type = PyDict_GetItemString(rules, TYPE_FIELD_KEY);
+int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title) {
+    PyObject *default_value = PyDict_GetItemString(rule, DEFAULT_FIELD_KEY);
+    PyObject *type = PyDict_GetItemString(rule, TYPE_FIELD_KEY);
 
-    if (!PyObject_IsInstance(default_value, type)) {
+    if (!PyObject_IsInstance(default_value, type) && default_value != Py_None) {
         return SetValidationDefaultError();
     }
 
@@ -51,6 +51,21 @@ int CheckFieldList(PyObject *json_field, PyObject *rule) {
 }
 
 
+int CheckExpandedField(PyObject *json_field, PyObject *rule) {
+    PyObject *is_expanded = PyDict_GetItemString(rule, EXPANDED_FIELD_KEY);
+    if (PyObject_IsTrue(is_expanded)) {
+        PyObject *expanded_rules_for = PyDict_GetItemString(rule, EXPANDED_RULES_FOR_FIELD_KEY);
+        if (PyList_CheckExact(json_field)) {
+            if (!CheckFieldList(json_field, rule)) {
+                return SetValidationError();
+            }
+        }
+    }
+
+    return 1;
+}
+
+
 int CheckField(PyObject *json_field, PyObject *rule) {
     PyObject *type = PyDict_GetItemString(rule, TYPE_FIELD_KEY);
     PyObject *is_required = PyDict_GetItemString(rule, REQUIRED_FIELD_KEY);
@@ -65,14 +80,8 @@ int CheckField(PyObject *json_field, PyObject *rule) {
         return SetValidationError();
     }
 
-    PyObject *is_expanded = PyDict_GetItemString(rule, EXPANDED_FIELD_KEY);
-    if (PyObject_IsTrue(is_expanded)) {
-        PyObject *expanded_rules_for = PyDict_GetItemString(rule, EXPANDED_RULES_FOR_FIELD_KEY);
-        if (PyList_CheckExact(json_field)) {
-            if (!CheckFieldList(json_field, rule)) {
-                return SetValidationError();
-            }
-        }
+    if (!CheckExpandedField(json_field, rule)) {
+        return NULL;
     }
 
     return 1;
