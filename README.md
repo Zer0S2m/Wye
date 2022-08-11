@@ -397,14 +397,21 @@ from wye.serializers import fields
 - `default: Any` - Дефолтное значение, работает если поле необязательное (`param_1: Optional[int]`), по умолчанию `None`
 - `alias: str` - публичное имя поля, по умолчанию `None`
 
-Типы:
-- `fields.BOOL` - Булевое значение
-- `fields.STR` - Строка
-- `fields.INT` - Целочисленное число
-- `fields.FLOAT` - Число с плавающей точкой
-- `fields.LIST` - Булевое значение
-- `fields.SET` - Множество
-- `fields.TUPLE` - Кортеж
-- `fields.DICT` - словарь
-- `fields.FROZENSET` - Неизменяемое множество
-- `fields.BYTES` - байты
+1) Типы:
+    - `fields.BOOL` - Булевое значение
+    - `fields.STR` - Строка
+    - `fields.INT` - Целочисленное число
+    - `fields.FLOAT` - Число с плавающей точкой
+    - `fields.LIST` - Булевое значение
+    - `fields.SET` - Множество
+    - `fields.TUPLE` - Кортеж
+    - `fields.DICT` - словарь
+    - `fields.FROZENSET` - Неизменяемое множество
+    - `fields.BYTES` - байты
+
+2) Typing:
+    - `typing.List` - `fields.LIST`
+    - `typing.Tuple` - `fields.TUPLE`
+    - `typing.Set` - `fields.SET`
+    - `typing.Union` - `fields.UNION`
+    Входные данные - `int`, `str`, `bytes`, `dict`, `list`, `set`, `tuple`, `float`, `frozenset`, `bool`
