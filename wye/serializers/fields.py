@@ -12,10 +12,13 @@ EXPANDED_RULES = "EXPANDED_RULES"
 EXPANDED_RULES_FOR = "FOR"
 ELEMENT_TYPE = "ELEMENT_TYPE"
 ELEMENT_TYPES = "ELEMENT_TYPES"
+TYPE_KEY_DICT = "TYPE_KEY"
+TYPE_VALUE_DICT = "TYPE_VALUE"
 
 EXPANDED_RULES_LIST = "list"
 EXPANDED_RULES_SET = "set"
 EXPANDED_RULES_TUPLE = "tuple"
+EXPANDED_RULES_DICT = "dict"
 
 
 class BaseField:
@@ -124,6 +127,13 @@ class SET(BaseField):
 class DICT(BaseField):
 	__type__ = dict
 
+	def _build_rules(self) -> Dict[str, Any]:
+		rules = super()._build_rules()
+		rules[EXPANDED] = False
+		rules[EXPANDED_RULES] = {}
+		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_DICT
+
+		return rules
 
 class BYTES(BaseField):
 	__type__ = bytes
