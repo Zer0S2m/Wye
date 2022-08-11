@@ -14,13 +14,14 @@ import wye_serializers
 NoneType = type(None)
 
 
-class BaseListSerializer:
-	def _build_rules_list(
+class BaseListSetSerializer:
+	def _build_rules_one(
 		self,
 		rule: Dict[str, Any],
-		type_field: Type[_GenericAlias]
+		type_field: Type[_GenericAlias],
+		type_origin: Union[list, set]
 	) -> Dict[str, Any]:
-		if get_origin(type_field) == list and isinstance(type_field, _GenericAlias):
+		if get_origin(type_field) == type_origin and isinstance(type_field, _GenericAlias):
 			rule.update({
 				f"{EXPANDED}": True
 			})
@@ -29,7 +30,28 @@ class BaseListSerializer:
 			})
 
 
-class BaseSerializer(BaseListSerializer):
+class BaseListSerializer(BaseListSetSerializer):
+	def _build_rules_list(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		return self._build_rules_one(rule, type_field, list)
+
+
+class BaseSetSerializers(BaseListSetSerializer):
+	def _build_rules_set(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		return self._build_rules_one(rule, type_field, set)
+
+
+class BaseSerializer(
+	BaseListSerializer,
+	BaseSetSerializers
+):
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
 
@@ -63,6 +85,7 @@ class BaseSerializer(BaseListSerializer):
 				rules[param][ALIAS] = param
 			type_ = self.__set_required_field(rules[param], type_)
 			self._build_rules_list(rules[param], type_)
+			self._build_rules_set(rules[param], type_)
 
 		return rules
 
