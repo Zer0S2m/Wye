@@ -6,9 +6,10 @@ int SetValidationError();
 int SetAttributeError();
 int SetValidationDefaultError();
 int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title);
-int CheckField(PyObject *json_field, PyObject *rule);
 int CheckFieldList(PyObject *json_field, PyObject *rule);
 int CheckFieldSet(PyObject *json_field, PyObject *rule);
+int CheckFieldTuple(PyObject *json_field, PyObject *rule);
+int CheckField(PyObject *json_field, PyObject *rule);
 int CheckExpandedField(PyObject *json_field, PyObject *rule);
 int BuildJson(
     PyObject *obj, PyObject *json, PyObject *params_rules, PyObject *rules, int index_param_rule
@@ -25,5 +26,7 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args);
 #define EXPANDED_RULES_FIELD_KEY "EXPANDED_RULES"
 #define EXPANDED_RULES_LIST_FIELD_KEY "list"
 #define EXPANDED_RULES_SET_FIELD_KEY "set"
+#define EXPANDED_RULES_TUPLE_FIELD_KEY "tuple"
 #define EXPANDED_RULES_FOR_FIELD_KEY "FOR"
 #define ARRAY_ELEMENT_TYPE_FIELD_KEY "ELEMENT_TYPE"
+#define ARRAY_ELEMENT_TYPES_FIELD_KEY "ELEMENT_TYPES"

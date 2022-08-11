@@ -69,6 +69,21 @@ int CheckFieldSet(PyObject *json_field, PyObject *rule) {
     return 1;
 }
 
+int CheckFieldTuple(PyObject *json_field, PyObject *rule) {
+    PyObject *expanded_rules = PyDict_GetItemString(rule, EXPANDED_RULES_FIELD_KEY);
+    PyObject *element_types = PyDict_GetItemString(expanded_rules, ARRAY_ELEMENT_TYPES_FIELD_KEY);
+    for (int i_element = 0; i_element < PyTuple_Size(json_field); i_element++) {
+        PyObject *element = PyTuple_GetItem(json_field, i_element);
+        PyObject *element_type = PyObject_Type(element);
+
+        if (!PySequence_Contains(element_types, element_type)) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 
 int CheckExpandedField(PyObject *json_field, PyObject *rule) {
     PyObject *is_expanded = PyDict_GetItemString(rule, EXPANDED_FIELD_KEY);
@@ -82,6 +97,11 @@ int CheckExpandedField(PyObject *json_field, PyObject *rule) {
         }
         else if (PySet_Check(json_field)) {
             if (!CheckFieldSet(json_field, rule)) {
+                return SetValidationError();
+            }
+        }
+        else if (PyTuple_Check(json_field)) {
+            if (!CheckFieldTuple(json_field, rule)) {
                 return SetValidationError();
             }
         }
