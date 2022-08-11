@@ -11,8 +11,11 @@ EXPANDED = "EXPANDED"
 EXPANDED_RULES = "EXPANDED_RULES"
 EXPANDED_RULES_FOR = "FOR"
 ELEMENT_TYPE = "ELEMENT_TYPE"
+ELEMENT_TYPES = "ELEMENT_TYPES"
 
 EXPANDED_RULES_LIST = "list"
+EXPANDED_RULES_SET = "set"
+EXPANDED_RULES_TUPLE = "tuple"
 
 
 class BaseField:
@@ -85,9 +88,6 @@ class BOOL(BaseField):
 class LIST(BaseField):
 	__type__ = list
 
-	def __init__(self, *args, **kwargs) -> None:
-		super().__init__(*args, **kwargs)
-
 	def _build_rules(self) -> Dict[str, Any]:
 		rules = super()._build_rules()
 		rules[EXPANDED] = False
@@ -100,9 +100,25 @@ class LIST(BaseField):
 class TUPLE(BaseField):
 	__type__ = tuple
 
+	def _build_rules(self) -> Dict[str, Any]:
+		rules = super()._build_rules()
+		rules[EXPANDED] = False
+		rules[EXPANDED_RULES] = {}
+		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_TUPLE
+
+		return rules
+
 
 class SET(BaseField):
 	__type__ = set
+
+	def _build_rules(self) -> Dict[str, Any]:
+		rules = super()._build_rules()
+		rules[EXPANDED] = False
+		rules[EXPANDED_RULES] = {}
+		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_SET
+
+		return rules
 
 
 class DICT(BaseField):
