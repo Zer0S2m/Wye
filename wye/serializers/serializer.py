@@ -7,7 +7,7 @@ from typing import (
 from wye.serializers.fields import (
 	ALIAS, REQUIRED, ELEMENT_TYPE,
 	EXPANDED_RULES, EXPANDED, ELEMENT_TYPES,
-	TYPE
+	TYPE, TYPE_KEY_DICT, TYPE_VALUE_DICT
 )
 import wye_serializers
 
@@ -80,10 +80,30 @@ class BaseUnionSerializer:
 		return rule
 
 
+class BaseDictSerializer:
+	def _build_rules_dict(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		if get_origin(type_field) is dict and isinstance(type_field, _GenericAlias):
+			type_key, type_value = get_args(type_field)
+			rule.update({
+				f"{EXPANDED}": True
+			})
+			rule[EXPANDED_RULES].update({
+				f"{TYPE_KEY_DICT}": type_key,
+				f"{TYPE_VALUE_DICT}": type_value,
+			})
+
+		return rule
+
+
 class BaseSerializer(
 	BaseListSerializer,
 	BaseSetSerializers,
 	BaseTupleSerializers,
+	BaseDictSerializer,
 	BaseUnionSerializer
 ):
 	def __init__(self) -> None:
@@ -113,6 +133,7 @@ class BaseSerializer(
 			self._build_rules_set(rules[param], type_)
 			self._build_rules_tuple(rules[param], type_)
 			self._build_rules_union(rules[param], type_)
+			self._build_rules_dict(rules[param], type_)
 
 		return rules
 

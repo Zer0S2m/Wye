@@ -414,4 +414,5 @@ from wye.serializers import fields
     - `typing.Tuple` - `fields.TUPLE`
     - `typing.Set` - `fields.SET`
     - `typing.Union` - `fields.UNION`
+    - `typing.Dict` - `fields.Dict`
     Входные данные - `int`, `str`, `bytes`, `dict`, `list`, `set`, `tuple`, `float`, `frozenset`, `bool`
