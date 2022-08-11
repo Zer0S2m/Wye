@@ -112,7 +112,7 @@ int CheckExpandedField(PyObject *json_field, PyObject *rule) {
 
 
 int CheckField(PyObject *json_field, PyObject *rule) {
-    PyObject *type = PyDict_GetItemString(rule, TYPE_FIELD_KEY);
+    PyObject *types = PyDict_GetItemString(rule, TYPE_FIELD_KEY);
     PyObject *is_required = PyDict_GetItemString(rule, REQUIRED_FIELD_KEY);
 
     if (!json_field && PyObject_IsTrue(is_required)) {
@@ -121,7 +121,7 @@ int CheckField(PyObject *json_field, PyObject *rule) {
     if (!json_field) {
         return 1;
     }
-    if (!PyObject_IsInstance(json_field, type)) {
+    if (!PySequence_Contains(types, PyObject_Type(json_field))) {
         return SetValidationError();
     }
 

@@ -32,7 +32,7 @@ class BaseField:
 
 	def _build_rules(self) -> Dict[str, Any]:
 		rules = {}
-		rules[TYPE] = self.__type__
+		rules[TYPE] = (self.__type__,)
 		rules[ALIAS] = self._alias
 		rules[DEFAULT] = self._default
 		rules[REQUIRED] = self._required
@@ -131,3 +131,7 @@ class BYTES(BaseField):
 
 class FROZENSET(BaseField):
 	__type__ = frozenset
+
+
+class UNION(BaseField):
+	__type__ = "union"

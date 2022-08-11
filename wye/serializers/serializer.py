@@ -6,7 +6,8 @@ from typing import (
 
 from wye.serializers.fields import (
 	ALIAS, REQUIRED, ELEMENT_TYPE,
-	EXPANDED_RULES, EXPANDED, ELEMENT_TYPES
+	EXPANDED_RULES, EXPANDED, ELEMENT_TYPES,
+	TYPE
 )
 import wye_serializers
 
@@ -28,6 +29,7 @@ class BaseListSetSerializer:
 			rule[EXPANDED_RULES].update({
 				f"{ELEMENT_TYPE}": get_args(type_field)[0]
 			})
+		return rule
 
 
 class BaseListSerializer(BaseListSetSerializer):
@@ -61,24 +63,31 @@ class BaseTupleSerializers:
 			rule[EXPANDED_RULES].update({
 				f"{ELEMENT_TYPES}": get_args(type_field)
 			})
+		return rule
+
+
+class BaseUnionSerializer:
+	def _build_rules_union(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		if get_origin(type_field) is Union and isinstance(type_field, _GenericAlias):
+			rule.update({
+				f"{TYPE}": get_args(type_field)
+			})
+
+		return rule
 
 
 class BaseSerializer(
 	BaseListSerializer,
 	BaseSetSerializers,
-	BaseTupleSerializers
+	BaseTupleSerializers,
+	BaseUnionSerializer
 ):
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
-
-	def is_validate(
-		self,
-		json: Union[Dict[str, Any], List[Dict[str, Any]]],
-		alias: bool = True
-	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
-		rules = self._set_alias_rules(alias)
-		data = wye_serializers.is_validate(json, rules)
-		return data
 
 	def _set_alias_rules(
 		self,
@@ -103,6 +112,7 @@ class BaseSerializer(
 			self._build_rules_list(rules[param], type_)
 			self._build_rules_set(rules[param], type_)
 			self._build_rules_tuple(rules[param], type_)
+			self._build_rules_union(rules[param], type_)
 
 		return rules
 
@@ -126,5 +136,11 @@ class BaseSerializer(
 
 
 class Serializer(BaseSerializer):
-	def __init__(self, *args, **kwargs) -> None:
-		super().__init__(*args, **kwargs)
+	def is_validate(
+		self,
+		json: Union[Dict[str, Any], List[Dict[str, Any]]],
+		alias: bool = True
+	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
+		rules = self._set_alias_rules(alias)
+		data = wye_serializers.is_validate(json, rules)
+		return data
