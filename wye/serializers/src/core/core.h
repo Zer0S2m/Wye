@@ -7,7 +7,7 @@ int SetAttributeError();
 int SetValidationDefaultError();
 int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title);
 int CheckFieldList(PyObject *json_field, PyObject *rule);
-int CheckFieldSet(PyObject *json_field, PyObject *rule);
+int CheckFieldSetFrozen(PyObject *json_field, PyObject *rule);
 int CheckFieldTuple(PyObject *json_field, PyObject *rule);
 int CheckFieldDict(PyObject *json_field, PyObject *rule);
 int CheckField(PyObject *json_field, PyObject *rule);

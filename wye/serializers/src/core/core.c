@@ -54,16 +54,17 @@ int CheckFieldList(PyObject *json_field, PyObject *rule) {
     return 1;
 }
 
-int CheckFieldSet(PyObject *json_field, PyObject *rule) {
+int CheckFieldSetFrozen(PyObject *json_field, PyObject *rule) {
     PyObject *expanded_rules = GET_EXPANDED_RULE(rule);
     PyObject *element_type = PyDict_GetItemString(expanded_rules, ARRAY_ELEMENT_TYPE_FIELD_KEY);
 
-    for (int i_element = 0; i_element < PySet_Size(json_field); i_element++) {
-        PyObject *element = PySet_Pop(json_field);
+    PyObject *list_elements = PySequence_List(json_field);
+
+    for (int i_element = 0; i_element < PyList_Size(list_elements); i_element++) {
+        PyObject *element = PyList_GetItem(list_elements, i_element);
         if (!PyObject_IsInstance(element, element_type)) {
             return 0;
         }
-        PySet_Add(json_field, element);
     }
 
     return 1;
@@ -117,8 +118,8 @@ int CheckExpandedField(PyObject *json_field, PyObject *rule) {
                 return SetValidationError();
             }
         }
-        else if (PySet_Check(json_field)) {
-            if (!CheckFieldSet(json_field, rule)) {
+        else if (PySet_Check(json_field) || PyFrozenSet_Check(json_field)) {
+            if (!CheckFieldSetFrozen(json_field, rule)) {
                 return SetValidationError();
             }
         }

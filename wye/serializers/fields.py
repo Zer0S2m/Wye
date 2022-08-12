@@ -19,6 +19,7 @@ EXPANDED_RULES_LIST = "list"
 EXPANDED_RULES_SET = "set"
 EXPANDED_RULES_TUPLE = "tuple"
 EXPANDED_RULES_DICT = "dict"
+EXPANDED_RULES_FROZENSET = "frozenset"
 
 
 class BaseField:
@@ -141,6 +142,14 @@ class BYTES(BaseField):
 
 class FROZENSET(BaseField):
 	__type__ = frozenset
+
+	def _build_rules(self) -> Dict[str, Any]:
+		rules = super()._build_rules()
+		rules[EXPANDED] = False
+		rules[EXPANDED_RULES] = {}
+		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_FROZENSET
+
+		return rules
 
 
 class UNION(BaseField):
