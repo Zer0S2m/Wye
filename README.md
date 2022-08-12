@@ -408,11 +408,13 @@ from wye.serializers import fields
     - `fields.DICT` - словарь
     - `fields.FROZENSET` - Неизменяемое множество
     - `fields.BYTES` - байты
+    - `fields.UNION` - выбор
 
 2) Typing:
     - `typing.List` - `fields.LIST`
     - `typing.Tuple` - `fields.TUPLE`
     - `typing.Set` - `fields.SET`
     - `typing.Union` - `fields.UNION`
-    - `typing.Dict` - `fields.Dict`
+    - `typing.Dict` - `fields.DICT`
+    - `typing.frozenset` - `fields.FROZENSET`
     Входные данные - `int`, `str`, `bytes`, `dict`, `list`, `set`, `tuple`, `float`, `frozenset`, `bool`

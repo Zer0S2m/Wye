@@ -50,6 +50,15 @@ class BaseSetSerializers(BaseListSetSerializer):
 		return self._build_rules_one(rule, type_field, set)
 
 
+class BaseFrozenSetSerializers(BaseListSetSerializer):
+	def _build_rules_frozenset(
+		self,
+		rule: Dict[str, Any],
+		type_field: Type[_GenericAlias]
+	) -> Dict[str, Any]:
+		return self._build_rules_one(rule, type_field, frozenset)
+
+
 class BaseTupleSerializers:
 	def _build_rules_tuple(
 		self,
@@ -104,7 +113,8 @@ class BaseSerializer(
 	BaseSetSerializers,
 	BaseTupleSerializers,
 	BaseDictSerializer,
-	BaseUnionSerializer
+	BaseUnionSerializer,
+	BaseFrozenSetSerializers
 ):
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
@@ -134,6 +144,7 @@ class BaseSerializer(
 			self._build_rules_tuple(rules[param], type_)
 			self._build_rules_union(rules[param], type_)
 			self._build_rules_dict(rules[param], type_)
+			self._build_rules_frozenset(rules[param], type_)
 
 		return rules
 
