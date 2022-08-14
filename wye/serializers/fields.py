@@ -7,19 +7,6 @@ ALIAS = "ALIAS"
 TYPE = "TYPE"
 DEFAULT = "DEFAULT"
 REQUIRED = "REQUIRED"
-EXPANDED = "EXPANDED"
-EXPANDED_RULES = "EXPANDED_RULES"
-EXPANDED_RULES_FOR = "FOR"
-ELEMENT_TYPE = "ELEMENT_TYPE"
-ELEMENT_TYPES = "ELEMENT_TYPES"
-TYPE_KEY_DICT = "TYPE_KEY"
-TYPE_VALUE_DICT = "TYPE_VALUE"
-
-EXPANDED_RULES_LIST = "list"
-EXPANDED_RULES_SET = "set"
-EXPANDED_RULES_TUPLE = "tuple"
-EXPANDED_RULES_DICT = "dict"
-EXPANDED_RULES_FROZENSET = "frozenset"
 
 
 class BaseField:
@@ -28,11 +15,13 @@ class BaseField:
 	def __init__(
 		self,
 		default: Any = None,
-		alias: Optional[str] = None
+		*,
+		alias: Optional[str] = None,
+		required: bool = True
 	) -> None:
 		self._default = default
 		self._alias = alias
-		self._required = True
+		self._required = required
 
 	def _build_rules(self) -> Dict[str, Any]:
 		rules = {}
@@ -40,7 +29,6 @@ class BaseField:
 		rules[ALIAS] = self._alias
 		rules[DEFAULT] = self._default
 		rules[REQUIRED] = self._required
-		rules[EXPANDED] = False
 
 		return rules
 
@@ -89,68 +77,9 @@ class BOOL(BaseField):
 	__type__ = bool
 
 
-class LIST(BaseField):
-	__type__ = list
-
-	def _build_rules(self) -> Dict[str, Any]:
-		rules = super()._build_rules()
-		rules[EXPANDED] = False
-		rules[EXPANDED_RULES] = {}
-		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_LIST
-
-		return rules
-
-
-class TUPLE(BaseField):
-	__type__ = tuple
-
-	def _build_rules(self) -> Dict[str, Any]:
-		rules = super()._build_rules()
-		rules[EXPANDED] = False
-		rules[EXPANDED_RULES] = {}
-		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_TUPLE
-
-		return rules
-
-
-class SET(BaseField):
-	__type__ = set
-
-	def _build_rules(self) -> Dict[str, Any]:
-		rules = super()._build_rules()
-		rules[EXPANDED] = False
-		rules[EXPANDED_RULES] = {}
-		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_SET
-
-		return rules
-
-
-class DICT(BaseField):
-	__type__ = dict
-
-	def _build_rules(self) -> Dict[str, Any]:
-		rules = super()._build_rules()
-		rules[EXPANDED] = False
-		rules[EXPANDED_RULES] = {}
-		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_DICT
-
-		return rules
-
 class BYTES(BaseField):
 	__type__ = bytes
 
 
-class FROZENSET(BaseField):
-	__type__ = frozenset
-
-	def _build_rules(self) -> Dict[str, Any]:
-		rules = super()._build_rules()
-		rules[EXPANDED] = False
-		rules[EXPANDED_RULES] = {}
-		rules[EXPANDED_RULES][EXPANDED_RULES_FOR] = EXPANDED_RULES_FROZENSET
-
-		return rules
-
-
-class UNION(BaseField):
-	__type__ = "union"
+class SERIALIZER(BaseField):
+	__type__ = "serializer"
