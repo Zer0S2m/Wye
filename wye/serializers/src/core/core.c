@@ -16,17 +16,17 @@ struct BuildFieldCheck {
 
 int *SetValidationError() {
     PyErr_SetString(PyExc_TypeError, "<WyeSerializers>: Validation error");
-    return (int *)-1;
+    return (int *)0;
 }
 
 int *SetAttributeError() {
     PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Missing required parameters");
-    return (int *)-1;
+    return (int *)0;
 }
 
 int *SetValidationDefaultError() {
     PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Validation error: default value");
-    return (int *)-1;
+    return (int *)0;
 }
 
 
@@ -102,6 +102,24 @@ int *BuildJson(struct Build obj_build) {
 }
 
 
+PyObject *BuildJsonFromList(struct Build obj_build, PyObject *raw_json) {
+    PyObject *list_ready_json = PyList_New(0);
+
+    for (int i_raw_json_obj = 0; i_raw_json_obj < PyList_Size(raw_json); i_raw_json_obj++) {
+        PyObject *raw_json_obj = PyList_GetItem(raw_json, i_raw_json_obj);
+        obj_build.raw_json = raw_json_obj;
+
+        if (!BuildJson(obj_build))
+            return NULL;
+
+        PyList_Append(list_ready_json, PyDict_Copy(obj_build.ready_json));
+        PyDict_Clear(obj_build.ready_json);
+    }
+
+    return list_ready_json;
+}
+
+
 static PyObject *method_build_json(PyObject *self, PyObject *args) {
     PyObject *raw_json;
     struct Build obj_build;
@@ -112,18 +130,9 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     obj_build.ready_json = PyDict_New();
 
     if (PyList_Check(raw_json)) {
-        PyObject *list_ready_json = PyList_New(0);
-
-        for (int i_raw_json_obj = 0; i_raw_json_obj < PyList_Size(raw_json); i_raw_json_obj++) {
-            PyObject *raw_json_obj = PyList_GetItem(raw_json, i_raw_json_obj);
-            obj_build.raw_json = raw_json_obj;
-
-            if (!BuildJson(obj_build))
-                return NULL;
-
-            PyList_Append(list_ready_json, PyDict_Copy(obj_build.ready_json));
-            PyDict_Clear(obj_build.ready_json);
-        }
+        PyObject *list_ready_json = BuildJsonFromList(obj_build, raw_json);
+        if (!list_ready_json)
+            return NULL;
 
         obj_build.ready_json = list_ready_json;
     } else {

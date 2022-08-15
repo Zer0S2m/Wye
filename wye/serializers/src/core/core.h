@@ -15,6 +15,7 @@ int *SetValidationDefaultError();
 
 int *CheckField(struct BuildFieldCheck build_field_check);
 int *SetDefaultValue(struct Build obj_build, struct BuildFieldCheck build_field_check);
+PyObject *BuildJsonFromList(struct Build obj_build, PyObject *raw_json);
 int *BuildJson(struct Build obj_build);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
 

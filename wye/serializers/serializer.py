@@ -9,6 +9,8 @@ import wye_serializers
 
 NoneType = type(None)
 
+IS_SERIALIZER = "IS_SERIALIZER"
+
 
 class MetaSerializer(type):
 	def __new__(cls, name, bases, namespace):
@@ -66,7 +68,8 @@ class BaseSerializer(metaclass=MetaSerializer):
 				if issubclass(type_, BaseSerializer):
 					self.__fields__[serializer_name][field] = {
 						**self.__fields__[type_.__name__],
-						**rules
+						**rules,
+						f"{IS_SERIALIZER}": True
 					}
 
 		final_serializer = self.__class__.__name__
