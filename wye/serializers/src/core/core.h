@@ -5,14 +5,19 @@
 #include <stdlib.h>
 
 
-int SetValidationError();
-int SetAttributeError();
-int SetValidationDefaultError();
+struct Build;
+struct BuildFieldCheck;
+
+
+int *SetValidationError();
+int *SetAttributeError();
+int *SetValidationDefaultError();
 
 int *CheckField(struct BuildFieldCheck build_field_check);
 int *SetDefaultValue(struct Build obj_build, struct BuildFieldCheck build_field_check);
-PyObject *BuildJson(struct Build obj_build);
+int *BuildJson(struct Build obj_build);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
+
 
 #define RULES_FIELD_KEY "rules"
 

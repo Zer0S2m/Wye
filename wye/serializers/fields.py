@@ -82,4 +82,4 @@ class BYTES(BaseField):
 
 
 class SERIALIZER(BaseField):
-	__type__ = "serializer"
+	__type__ = dict
