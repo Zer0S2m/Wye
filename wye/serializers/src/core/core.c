@@ -103,14 +103,34 @@ int *BuildJson(struct Build obj_build) {
 
 
 static PyObject *method_build_json(PyObject *self, PyObject *args) {
+    PyObject *raw_json;
     struct Build obj_build;
 
-    if (!PyArg_ParseTuple(args, "OO", &obj_build.raw_json, &obj_build.rules))
+    if (!PyArg_ParseTuple(args, "OO", &raw_json, &obj_build.rules))
         return NULL;
 
     obj_build.ready_json = PyDict_New();
-    if (!BuildJson(obj_build))
-        return NULL;
+
+    if (PyList_Check(raw_json)) {
+        PyObject *list_ready_json = PyList_New(0);
+
+        for (int i_raw_json_obj = 0; i_raw_json_obj < PyList_Size(raw_json); i_raw_json_obj++) {
+            PyObject *raw_json_obj = PyList_GetItem(raw_json, i_raw_json_obj);
+            obj_build.raw_json = raw_json_obj;
+
+            if (!BuildJson(obj_build))
+                return NULL;
+
+            PyList_Append(list_ready_json, PyDict_Copy(obj_build.ready_json));
+            PyDict_Clear(obj_build.ready_json);
+        }
+
+        obj_build.ready_json = list_ready_json;
+    } else {
+        obj_build.raw_json = raw_json;
+        if (!BuildJson(obj_build))
+            return NULL;
+    }
 
     return obj_build.ready_json;
 }
