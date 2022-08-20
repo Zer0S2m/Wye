@@ -7,10 +7,12 @@ ALIAS = "ALIAS"
 TYPE = "TYPE"
 DEFAULT = "DEFAULT"
 REQUIRED = "REQUIRED"
+IS_SERIALIZER = "IS_SERIALIZER"
 
 
 class BaseField:
 	__type__ = None
+	__is_serializer__ = False
 
 	def __init__(
 		self,
@@ -29,6 +31,7 @@ class BaseField:
 		rules[ALIAS] = self._alias
 		rules[DEFAULT] = self._default
 		rules[REQUIRED] = self._required
+		rules[IS_SERIALIZER] = self.__is_serializer__
 
 		return rules
 
@@ -82,4 +85,5 @@ class BYTES(BaseField):
 
 
 class SERIALIZER(BaseField):
-	__type__ = "serializer"
+	__type__ = dict
+	__is_serializer__ = True

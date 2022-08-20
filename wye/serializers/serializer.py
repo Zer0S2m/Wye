@@ -64,13 +64,13 @@ class BaseSerializer(metaclass=MetaSerializer):
 			for field, rules in fields.items():
 				type_ = rules["type"]
 				if issubclass(type_, BaseSerializer):
-					self.__fields__[serializer_name][field] = self.__fields__[type_.__name__]
+					self.__fields__[serializer_name][field] = {
+						**self.__fields__[type_.__name__],
+						**rules
+					}
 
-		final_serializer = list(self.__fields__.keys())[-1]
+		final_serializer = self.__class__.__name__
 		return self.__fields__.get(final_serializer)
-
-	def _build_levels(self) -> None:
-		print()
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
