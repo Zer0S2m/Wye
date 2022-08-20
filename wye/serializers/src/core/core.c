@@ -6,7 +6,7 @@ struct BuildState {
     PyObject *rule;
     PyObject *keys_level; // Example: ["param_1", "param_2"] -> {"param_1": {"param_2": ...}}
     PyObject *ready_json;
-    PyObject *raw_json_obj; // Value not type class <dict>
+    PyObject *raw_json_obj;
 };
 
 struct Build {
@@ -112,35 +112,6 @@ int *GetReadyJsonPart(struct BuildState build_state) {
         build_state.ready_json = ready_json_obj_by_level;
     }
 
-    return 1;
-}
-
-
-int *BuildsState(struct BuildState build_state) {
-    int length_keys_level = PyList_Size(build_state.keys_level);
-
-    if (length_keys_level == 1)
-        return NULL;
-
-    for (int i_key_level = 0; i_key_level < length_keys_level - 1; i_key_level++) {
-        PyObject *key_level = PyList_GetItem(build_state.keys_level, i_key_level);
-
-        PyObject *raw_jsom_obj_by_level = PyDict_GetItem(build_state.raw_json_obj, key_level);
-        if (!raw_jsom_obj_by_level)
-            return (int *) 0;
-
-        PyObject *ready_json_obj_by_level = PyDict_GetItem(build_state.ready_json, key_level);
-
-        if (!ready_json_obj_by_level) {
-            PyObject *alias_key_json = PyDict_GetItemString(build_state.rule, ALIAS_FIELD_KEY);
-            PyDict_SetItem(build_state.ready_json, alias_key_json, PyDict_New());
-            ready_json_obj_by_level = build_state.ready_json;
-            PySequence_SetItem(build_state.keys_level, i_key_level, alias_key_json);
-        }
-
-        build_state.ready_json = ready_json_obj_by_level;
-    }
-
     return (int *) 1;
 }
 
@@ -152,7 +123,7 @@ PyObject *GetLevelKeyParam(PyObject *keys_level) {
 
 
 int *_BuildJson(struct BuildState build_state) {
-    return (int *)1;
+    return (int *) 1;
 }
 
 
@@ -170,16 +141,10 @@ int *BuildJson(struct Build obj_build, struct BuildState build_state) {
         PyObject *keys_level = PyList_New(0);
         PyList_Append(keys_level, key_rule_title);
 
-        if (PyObject_IsTrue(is_serializer)) {
-
-        } else {
-
-        }
-
         build_state.rule = rule;
         build_state.keys_level = keys_level;
         build_state.raw_json_obj = raw_json_obj;
-        BuildsState(build_state);
+        GetReadyJsonPart(build_state);
 
         PyObject *level_key_param = GetLevelKeyParam(build_state.keys_level);
         struct BuildFieldCheck build_field_check = { level_key_param, build_state.rule, build_state.raw_json_obj };
@@ -191,7 +156,7 @@ int *BuildJson(struct Build obj_build, struct BuildState build_state) {
             return NULL;
     }
 
-    return 1;
+    return (int *) 1;
 }
 
 
@@ -238,8 +203,6 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
             return NULL;
     }
 
-    struct BuildState build_state = { 0, NULL, NULL, obj_build.ready_json , NULL };
-    // return BuildJson(obj_build, build_state);
     return obj_build.ready_json;
 }
 
