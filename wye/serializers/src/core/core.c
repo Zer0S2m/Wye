@@ -143,6 +143,18 @@ PyObject *GetPartRawJson(PyObject *raw_json, PyObject *key_tree) {
 
 
 /**
+ * @brief Get the Part Rule object
+ *
+ * @param rule
+ * @param key_tree
+ * @return PyObject*
+*/
+PyObject *GetPartRule(PyObject *rule, PyObject *key_tree) {
+    return GetPartReadyJson(rule, key_tree);
+}
+
+
+/**
  * @brief Get the Part Ready Json object
  *
  * @param ready_json in python -> dict
@@ -163,25 +175,6 @@ PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree) {
     }
 
     return part_ready_json;
-}
-
-
-/**
- * @brief Get the Part Ready Json object
- *
- * @param ready_json in python -> dict
- * @param key_tree in python -> list; example ["param_1", "param_2"]
- * @return PyObject* - in python -> dict
-*/
-PyObject *GetPartRule(PyObject *rules, PyObject *key_tree) {
-    PyObject *part_rule = rules;
-
-    for (int i_key_tree = 0; i_key_tree < PyList_Size(key_tree); i_key_tree++) {
-        PyObject *part_rule_element = PyList_GetItem(key_tree, i_key_tree);
-        part_rule = PyDict_GetItem(part_rule, part_rule_element);
-    }
-
-    return part_rule;
 }
 
 
@@ -299,9 +292,16 @@ int *BuildJson(struct Build build) {
             if (!BuildSingleField(build, key_tree_element))
                 return NULL;
         } else {
-            /**
-             * next -> multilevel processing
-             */
+            PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree);
+            PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
+            PyObject *part_rule = GetPartRule(build.rules, key_tree);
+
+            struct Build new_build = { part_raw_json, part_ready_json, part_rule };
+
+            PyObject *param_title = GetParamFromLevelKeys(key_tree);
+
+            if (!BuildSingleField(new_build, param_title))
+                return NULL;
         }
     }
 
@@ -358,7 +358,6 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
         obj_build.ready_json = list_ready_json;
     } else {
         obj_build.raw_json = raw_json;
-
         if (!BuildJson(obj_build))
             return NULL;
     }
