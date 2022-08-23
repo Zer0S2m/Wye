@@ -108,7 +108,10 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
  * @return int*
  */
 int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key) {
-    PyObject *next_key_tree = PyList_GetItem(keys_tree, level_key + 1);
+    PyObject *next_key_tree = PyList_GET_ITEM(keys_tree, level_key + 1);
+    if (!PyList_Check(next_key_tree))
+        return (int *) 0;
+
     PyObject *first_key_tree = PyList_GetItem(next_key_tree, 0);
 
     if (key == first_key_tree)
@@ -358,6 +361,7 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
         obj_build.ready_json = list_ready_json;
     } else {
         obj_build.raw_json = raw_json;
+
         if (!BuildJson(obj_build))
             return NULL;
     }
