@@ -1,37 +1,42 @@
+#define PY_SSIZE_T_CLEAN
+
+#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 
-int SetValidationError();
-int SetAttributeError();
-int SetValidationDefaultError();
-int *SetDefaultValue(PyObject *obj, PyObject *rule, PyObject *param_title);
-int CheckFieldList(PyObject *json_field, PyObject *rule);
-int CheckFieldSetFrozen(PyObject *json_field, PyObject *rule);
-int CheckFieldTuple(PyObject *json_field, PyObject *rule);
-int CheckFieldDict(PyObject *json_field, PyObject *rule);
-int CheckField(PyObject *json_field, PyObject *rule);
-int CheckExpandedField(PyObject *json_field, PyObject *rule);
-int BuildJson(
-    PyObject *obj, PyObject *json, PyObject *params_rules, PyObject *rules, int index_param_rule
-);
+struct Build;
+struct BuildFieldCheck;
+
+// Set error
+int *SetValidationError();
+int *SetAttributeError();
+int *SetValidationDefaultError();
+
+// Build json
+int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_check);
+int *CheckField(struct BuildFieldCheck build_field_check);
+int *SetField(struct Build build, struct BuildFieldCheck build_field_check);
+int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, int level);
+PyObject *GetParamFromLevelKeys(PyObject *keys_level);
+PyObject *GetPartRule(PyObject *rules, PyObject *key_tree);
+PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree);
+void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree);
+void FindAllKeysRawJson(PyObject *rules, PyObject *result, PyObject *path);
+int *BuildSingleField(struct Build build, PyObject *key_tree_element);
+int *BuildJson(struct Build build);
+PyObject *BuildJsonFromList(struct Build obj_build, PyObject *raw_json);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
-static PyObject *method_is_validate(PyObject *self, PyObject *args);
+
+
+#define RULES_FIELD_KEY "RULES"
+#define PY_RULES_FIELD_KEY PyUnicode_FromString(RULES_FIELD_KEY)
+#define TYPE_OBJ_FIELD_KEY "type"
 
 #define TYPE_FIELD_KEY "TYPE"
 #define ALIAS_FIELD_KEY "ALIAS"
 #define DEFAULT_FIELD_KEY "DEFAULT"
 #define REQUIRED_FIELD_KEY "REQUIRED"
-#define EXPANDED_FIELD_KEY "EXPANDED"
-#define EXPANDED_RULES_FIELD_KEY "EXPANDED_RULES"
-#define ARRAY_ELEMENT_TYPE_FIELD_KEY "ELEMENT_TYPE"
-#define ARRAY_ELEMENT_TYPES_FIELD_KEY "ELEMENT_TYPES"
-#define TYPE_KEY_DICT_FIELD_KEY "TYPE_KEY"
-#define TYPE_VALUE_DICT_FIELD_KEY "TYPE_VALUE"
+#define IS_SERIALIZER_FIELD_KEY "IS_SERIALIZER"
 
-#define EXPANDED_RULES_LIST_FIELD_KEY "list"
-#define EXPANDED_RULES_SET_FIELD_KEY "set"
-#define EXPANDED_RULES_TUPLE_FIELD_KEY "tuple"
-#define EXPANDED_RULES_FOR_FIELD_KEY "FOR"
-
-#define GET_EXPANDED_RULE(rule) PyDict_GetItemString(rule, EXPANDED_RULES_FIELD_KEY)
+#define GET_RULES(rules) PySequence_GetItem(rules, 0)
