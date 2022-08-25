@@ -8,6 +8,7 @@ import wye_serializers
 
 
 NoneType = type(None)
+RULES = "RULES"
 
 
 class MetaSerializer(type):
@@ -22,10 +23,7 @@ class MetaSerializer(type):
 					rules = namespace.get(field)()
 					cls.__set_alias_rules(field, rules)
 					fields.update({
-						f"{field}": {
-							"rules": rules,
-							"type": type_
-						}
+						f"{field}": (rules, type_)
 					})
 
 				class_.__fields__.update({
@@ -57,16 +55,22 @@ class BaseSerializer(metaclass=MetaSerializer):
 		json: Union[Dict[str, Any], List[Dict[str, Any]]],
 		alias: bool = True
 	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
+		# wye_serializer.is_validate
 		...
 
 	def _build_rules(self) -> Dict[str, Any]:
 		for serializer_name, fields in self.__fields__.items():
 			for field, rules in fields.items():
-				type_ = rules["type"]
+				type_ = None
+				if isinstance(rules, tuple):
+					type_ = rules[1]
+				elif isinstance(rules, dict):
+					type_ = rules[f"{RULES}"][1]
+
 				if issubclass(type_, BaseSerializer):
 					self.__fields__[serializer_name][field] = {
 						**self.__fields__[type_.__name__],
-						**rules
+						f"{RULES}": (*rules,)
 					}
 
 		final_serializer = self.__class__.__name__

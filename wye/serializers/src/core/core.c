@@ -107,12 +107,17 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
  * @param level_key in python -> int
  * @return int*
  */
-int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key) {
-    PyObject *next_key_tree = PyList_GET_ITEM(keys_tree, level_key + 1);
-    if (!PyList_Check(next_key_tree))
+int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, int level) {
+    if (PyList_Size(keys_tree) <= level_key_tree + 1)
         return (int *) 0;
 
-    PyObject *first_key_tree = PyList_GetItem(next_key_tree, 0);
+    PyObject *next_key_tree = PyList_GET_ITEM(keys_tree, level_key_tree + 1);
+    PyObject *current_key_tree = PyList_GetItem(keys_tree, level_key_tree);
+
+    if (PyList_Size(current_key_tree) > PyList_Size(next_key_tree))
+        return (int *) 0;
+
+    PyObject *first_key_tree = PyList_GetItem(next_key_tree, level);
 
     if (key == first_key_tree)
         return (int *) 1;
@@ -220,29 +225,31 @@ void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree) {
 /**
  * @brief
  *
- * @param raw_json in python -> dict
+ * @param rules in python -> dict
  * @param result in python -> list
  * @param path in python -> list
 */
-void FindAllKeysRawJson(PyObject *raw_json, PyObject *result, PyObject *path) {
-    if (PyDict_Check(raw_json)) {
-        PyObject *keys = PyDict_Keys(raw_json);
-        PyObject *values = PyDict_Values(raw_json);
+void FindAllKeysRawJson(PyObject *rules, PyObject *result, PyObject *path) {
+    if (PyDict_Check(rules)) {
+        PyObject *keys = PyDict_Keys(rules);
+        PyObject *values = PyDict_Values(rules);
 
         for (int i_key = 0; i_key < PyList_Size(keys); i_key++) {
             PyObject *key = PyList_GetItem(keys, i_key);
-            PyObject *extend_list_new_path = PyList_New(0);
-            PyList_Append(extend_list_new_path, key);
+            if (PyUnicode_Compare(key, PY_RULES_FIELD_KEY)) {
+                PyObject *extend_list_new_path = PyList_New(0);
+                PyList_Append(extend_list_new_path, key);
 
-            PyObject *new_path = PyList_New(0);
-            PyObject_CallMethod(new_path, "extend", "O", path);
-            PyObject_CallMethod(new_path, "extend", "O", extend_list_new_path);
+                PyObject *new_path = PyList_New(0);
+                PyObject_CallMethod(new_path, "extend", "O", path);
+                PyObject_CallMethod(new_path, "extend", "O", extend_list_new_path);
 
-            PyList_Append(result, new_path);
+                PyList_Append(result, new_path);
 
-            PyObject *value_raw_json = PyList_GetItem(values, i_key);
+                PyObject *part_rule = PyList_GetItem(values, i_key);
 
-            FindAllKeysRawJson(value_raw_json, result, new_path);
+                FindAllKeysRawJson(part_rule, result, new_path);
+            }
         }
     }
 }
@@ -258,7 +265,7 @@ void FindAllKeysRawJson(PyObject *raw_json, PyObject *result, PyObject *path) {
 int *BuildSingleField(struct Build build, PyObject *key_tree_element) {
     PyObject *rules_param = PyDict_GetItem(build.rules, key_tree_element);
 
-    PyObject *rule = PyDict_GetItemString(rules_param, RULES_FIELD_KEY);
+    PyObject *rule = PySequence_GetItem(rules_param, 0);
     PyObject *raw_json_obj = PyDict_GetItem(build.raw_json, key_tree_element);
 
     struct BuildFieldCheck build_field_check = { key_tree_element, rule, raw_json_obj };
@@ -281,20 +288,23 @@ int *BuildSingleField(struct Build build, PyObject *key_tree_element) {
 */
 int *BuildJson(struct Build build) {
     PyObject *keys_tree = PyList_New(0);
-    FindAllKeysRawJson(build.raw_json, keys_tree, PyList_New(0));
+    FindAllKeysRawJson(build.rules, keys_tree, PyList_New(0));
     BuildInitialAssemblyReadyJson(build.ready_json, keys_tree);
 
     for (int i_key_tree = 0; i_key_tree < PyList_Size(keys_tree); i_key_tree++) {
         PyObject *key_tree = PyList_GetItem(keys_tree, i_key_tree);
-        Py_ssize_t length_key_tree = PyList_Size(key_tree);
+        int length_key_tree = PyList_Size(key_tree);
+        PyObject *key_tree_element = PyList_GetItem(key_tree, length_key_tree - 1);
 
         if (length_key_tree == 1) {
-            PyObject *key_tree_element = PyList_GetItem(key_tree, 0);
-            if (IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree))
+            if (IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1))
                 continue;
             if (!BuildSingleField(build, key_tree_element))
                 return NULL;
         } else {
+            if (IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1))
+                continue;
+
             PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree);
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
             PyObject *part_rule = GetPartRule(build.rules, key_tree);
@@ -346,27 +356,27 @@ PyObject *BuildJsonFromList(struct Build obj_build, PyObject *raw_json) {
  */
 static PyObject *method_build_json(PyObject *self, PyObject *args) {
     PyObject *raw_json;
-    struct Build obj_build;
+    struct Build build;
 
-    if (!PyArg_ParseTuple(args, "OO", &raw_json, &obj_build.rules))
+    if (!PyArg_ParseTuple(args, "OO", &raw_json, &build.rules))
         return NULL;
 
-    obj_build.ready_json = PyDict_New();
+    build.ready_json = PyDict_New();
 
     if (PyList_Check(raw_json)) {
-        PyObject *list_ready_json = BuildJsonFromList(obj_build, raw_json);
+        PyObject *list_ready_json = BuildJsonFromList(build, raw_json);
         if (!list_ready_json)
             return NULL;
 
-        obj_build.ready_json = list_ready_json;
+        build.ready_json = list_ready_json;
     } else {
-        obj_build.raw_json = raw_json;
-
-        if (!BuildJson(obj_build))
+        build.raw_json = raw_json;
+        // return BuildJson(build);
+        if (!BuildJson(build))
             return NULL;
     }
 
-    return obj_build.ready_json;
+    return build.ready_json;
 }
 
 
