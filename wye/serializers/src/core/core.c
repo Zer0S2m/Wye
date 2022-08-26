@@ -2,15 +2,24 @@
 
 
 struct Build {
-    PyObject *raw_json;
-    PyObject *ready_json;
-    PyObject *rules;
+    PyObject *raw_json; // in python -> dict
+    PyObject *ready_json; // in python -> dict
+    PyObject *rules; // in python -> dict
+    int is_history;
 };
 
 struct BuildFieldCheck {
-    PyObject *param_title;
-    PyObject *rule;
-    PyObject *raw_json_obj;
+    PyObject *param_title; // in python str
+    PyObject *rule; // in python -> dict
+    PyObject *raw_json_obj; // in python -> typing.Any
+};
+
+// For optimization
+struct HistoryBuild {
+    PyObject *keys_tree_param_title; // in python -> list
+    PyObject *part_rule; // in python -> list
+    PyObject *keys_tree; // in python -> list
+    int *is_any_nesting_in_key[];
 };
 
 
@@ -284,11 +293,17 @@ int *BuildSingleField(struct Build build, PyObject *key_tree_element) {
  * @brief
  *
  * @param build
+ * @param history_build
  * @return int*
 */
-int *BuildJson(struct Build build) {
+int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
     PyObject *keys_tree = PyList_New(0);
-    FindAllKeysRawJson(build.rules, keys_tree, PyList_New(0));
+    if (!build.is_history) {
+        FindAllKeysRawJson(build.rules, keys_tree, PyList_New(0));
+        history_build->keys_tree = keys_tree;
+    } else
+        keys_tree = history_build->keys_tree;
+
     BuildInitialAssemblyReadyJson(build.ready_json, keys_tree);
 
     for (int i_key_tree = 0; i_key_tree < PyList_Size(keys_tree); i_key_tree++) {
@@ -296,22 +311,50 @@ int *BuildJson(struct Build build) {
         int length_key_tree = PyList_Size(key_tree);
         PyObject *key_tree_element = PyList_GetItem(key_tree, length_key_tree - 1);
 
+        int *is_any_nesting_in_key;
+
         if (length_key_tree == 1) {
-            if (IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1))
-                continue;
+            if (!build.is_history) {
+                is_any_nesting_in_key = IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1);
+                if (is_any_nesting_in_key) {
+                    history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
+                    continue;
+                }
+            } else {
+                if (history_build->is_any_nesting_in_key[i_key_tree])
+                    continue;
+            }
             if (!BuildSingleField(build, key_tree_element))
                 return NULL;
         } else {
-            if (IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1))
+            if (!build.is_history) {
+                is_any_nesting_in_key = IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1);
+            } else
+                is_any_nesting_in_key = history_build->is_any_nesting_in_key[i_key_tree];
+
+            if (is_any_nesting_in_key)
                 continue;
 
             PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree);
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
-            PyObject *part_rule = GetPartRule(build.rules, key_tree);
+
+            PyObject *part_rule;
+            if (!build.is_history) {
+                part_rule = GetPartRule(build.rules, key_tree);
+                PyList_Append(history_build->part_rule, part_rule);
+            } else
+                part_rule = PyList_GetItem(history_build->part_rule, i_key_tree);
 
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
 
-            PyObject *param_title = GetParamFromLevelKeys(key_tree);
+            PyObject *param_title;
+
+            if (!build.is_history) {
+                param_title = GetParamFromLevelKeys(key_tree);
+                PyList_Append(history_build->keys_tree_param_title, param_title);
+            }
+            else
+                param_title = PyList_GetItem(history_build->keys_tree_param_title, i_key_tree);
 
             if (!BuildSingleField(new_build, param_title))
                 return NULL;
@@ -325,22 +368,25 @@ int *BuildJson(struct Build build) {
 /**
  * @brief
  *
- * @param obj_build
+ * @param build
  * @param raw_json in python -> dict
+ * @param history_build
  * @return PyObject*
  */
-PyObject *BuildJsonFromList(struct Build obj_build, PyObject *raw_json) {
+PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build) {
     PyObject *list_ready_json = PyList_New(0);
 
     for (int i_raw_json_obj = 0; i_raw_json_obj < PyList_Size(raw_json); i_raw_json_obj++) {
         PyObject *raw_json_obj = PyList_GetItem(raw_json, i_raw_json_obj);
-        obj_build.raw_json = raw_json_obj;
+        build.raw_json = raw_json_obj;
 
-        if (!BuildJson(obj_build))
+        if (!BuildJson(build, history_build))
             return NULL;
 
-        PyList_Append(list_ready_json, PyDict_Copy(obj_build.ready_json));
-        PyDict_Clear(obj_build.ready_json);
+        build.is_history = 1;
+
+        PyList_Append(list_ready_json, PyDict_Copy(build.ready_json));
+        PyDict_Clear(build.ready_json);
     }
 
     return list_ready_json;
@@ -361,18 +407,21 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "OO", &raw_json, &build.rules))
         return NULL;
 
+    struct HistoryBuild history_build = { PyList_New(0), PyList_New(0), PyList_New(0) };
+    build.is_history = 0;
+
     build.ready_json = PyDict_New();
 
     if (PyList_Check(raw_json)) {
-        PyObject *list_ready_json = BuildJsonFromList(build, raw_json);
+        PyObject *list_ready_json = BuildJsonFromList(build, raw_json, &history_build);
         if (!list_ready_json)
             return NULL;
 
         build.ready_json = list_ready_json;
     } else {
         build.raw_json = raw_json;
-        // return BuildJson(build);
-        if (!BuildJson(build))
+
+        if (!BuildJson(build, &history_build))
             return NULL;
     }
 
