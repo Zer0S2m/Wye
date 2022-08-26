@@ -2,6 +2,7 @@
 
 #include <Python.h>
 #include <stdio.h>
+#include <malloc.h>
 #include <stdlib.h>
 
 
@@ -28,6 +29,7 @@ int *BuildSingleField(struct Build build, PyObject *key_tree_element);
 int *BuildJson(struct Build build, struct HistoryBuild *history_build);
 PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
+static PyObject *method_is_validate(PyObject *self, PyObject *args);
 
 
 #define RULES_FIELD_KEY "RULES"

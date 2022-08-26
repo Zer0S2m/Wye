@@ -19,7 +19,7 @@ struct HistoryBuild {
     PyObject *keys_tree_param_title; // in python -> list
     PyObject *part_rule; // in python -> list
     PyObject *keys_tree; // in python -> list
-    int *is_any_nesting_in_key[];
+    int *is_any_nesting_in_key; // array
 };
 
 
@@ -274,7 +274,7 @@ void FindAllKeysRawJson(PyObject *rules, PyObject *result, PyObject *path) {
 int *BuildSingleField(struct Build build, PyObject *key_tree_element) {
     PyObject *rules_param = PyDict_GetItem(build.rules, key_tree_element);
 
-    PyObject *rule = PySequence_GetItem(rules_param, 0);
+    PyObject *rule = GET_RULES(rules_param);
     PyObject *raw_json_obj = PyDict_GetItem(build.raw_json, key_tree_element);
 
     struct BuildFieldCheck build_field_check = { key_tree_element, rule, raw_json_obj };
@@ -301,6 +301,7 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
     if (!build.is_history) {
         FindAllKeysRawJson(build.rules, keys_tree, PyList_New(0));
         history_build->keys_tree = keys_tree;
+        history_build->is_any_nesting_in_key = (int *) malloc(sizeof(int) * PyList_Size(keys_tree) - 1);
     } else
         keys_tree = history_build->keys_tree;
 
@@ -314,47 +315,45 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
         int *is_any_nesting_in_key;
 
         if (length_key_tree == 1) {
+            PyList_Append(history_build->keys_tree_param_title, key_tree_element);
+            PyList_Append(history_build->part_rule, PyLong_FromLong(0));
+
             if (!build.is_history) {
                 is_any_nesting_in_key = IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1);
-                if (is_any_nesting_in_key) {
-                    history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
+                history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
+                if (is_any_nesting_in_key)
                     continue;
-                }
-            } else {
-                if (history_build->is_any_nesting_in_key[i_key_tree])
-                    continue;
-            }
+            } else if (history_build->is_any_nesting_in_key[i_key_tree])
+                continue;
+
             if (!BuildSingleField(build, key_tree_element))
                 return NULL;
         } else {
+            PyObject *param_title, *part_rule;
+            if (!build.is_history) {
+                param_title = GetParamFromLevelKeys(key_tree);
+                part_rule = GetPartRule(build.rules, key_tree);
+
+                PyList_Append(history_build->keys_tree_param_title, param_title);
+                PyList_Append(history_build->part_rule, part_rule);
+            }
+            else {
+                param_title = PyList_GetItem(history_build->keys_tree_param_title, i_key_tree);
+                part_rule = PyList_GetItem(history_build->part_rule, i_key_tree);
+            }
+
             if (!build.is_history) {
                 is_any_nesting_in_key = IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1);
-            } else
-                is_any_nesting_in_key = history_build->is_any_nesting_in_key[i_key_tree];
-
-            if (is_any_nesting_in_key)
+                history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
+                if (is_any_nesting_in_key)
+                    continue;
+            } else if (history_build->is_any_nesting_in_key[i_key_tree])
                 continue;
 
             PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree);
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
 
-            PyObject *part_rule;
-            if (!build.is_history) {
-                part_rule = GetPartRule(build.rules, key_tree);
-                PyList_Append(history_build->part_rule, part_rule);
-            } else
-                part_rule = PyList_GetItem(history_build->part_rule, i_key_tree);
-
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
-
-            PyObject *param_title;
-
-            if (!build.is_history) {
-                param_title = GetParamFromLevelKeys(key_tree);
-                PyList_Append(history_build->keys_tree_param_title, param_title);
-            }
-            else
-                param_title = PyList_GetItem(history_build->keys_tree_param_title, i_key_tree);
 
             if (!BuildSingleField(new_build, param_title))
                 return NULL;
@@ -429,12 +428,35 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *method_is_validate(PyObject *self, PyObject *args) {
+    PyObject *obj = method_build_json(self, args);
+    PyObject *list_err_obj = PyList_New(0);
+    PyErr_Clear();
+
+    if (!obj) {
+        PyList_Append(list_err_obj, Py_False);
+        PyList_Append(list_err_obj, Py_None);
+    } else {
+        PyList_Append(list_err_obj, Py_True);
+        PyList_Append(list_err_obj, obj);
+    }
+
+    return PyList_AsTuple(list_err_obj);
+}
+
+
 static PyMethodDef WyeSerializersMethods[] = {
     {
         "build_json",
         method_build_json,
         METH_VARARGS,
         "Collects json according to the rules"
+    },
+    {
+        "is_validate",
+        method_is_validate,
+        METH_VARARGS,
+        "Checks if json is valid"
     },
     { NULL, NULL, 0, NULL }
 };
