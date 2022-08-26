@@ -7,6 +7,7 @@
 
 struct Build;
 struct BuildFieldCheck;
+struct HistoryBuild;
 
 // Set error
 int *SetValidationError();
@@ -24,8 +25,8 @@ PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree);
 void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree);
 void FindAllKeysRawJson(PyObject *rules, PyObject *result, PyObject *path);
 int *BuildSingleField(struct Build build, PyObject *key_tree_element);
-int *BuildJson(struct Build build);
-PyObject *BuildJsonFromList(struct Build obj_build, PyObject *raw_json);
+int *BuildJson(struct Build build, struct HistoryBuild *history_build);
+PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
 
 
