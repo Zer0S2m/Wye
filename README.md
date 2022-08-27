@@ -371,21 +371,32 @@ from wye.serializers import Serializer
 
 Пример:
 ```python
-import typing
-
 from wye.serializers import Serializer
 from wye.serializers import fields
 
 
 class Serializer_1(Serializer):
-    param_1: typing.Optional[int] = fields.INT(default = 10, alias = "param1")
+    param_1: int = fields.INT(default = 10, alias = "param1")
     param_2: str = fields.STR(alias = "param2")
     param_3: float = fields.FLOAT()
     param_4: bool = fields.BOOL(alias = "param4")
+
+
+class Serializer_2(Serializer):
+    param_1: Serializer_1 = fields.SERIALIZER(alias = "param1")
+    param_2: int = fields.INT(alias = "param2")
 ```
 
 Методы:
-- `is_validate(json: Union[Dict[str, Any], List[Dict[str, Any]]], alias: bool = True)` - Провалидировать обьекты. `alias` добавить проверку по ключам, по умолчанию `True`. Возвращает `Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]`
+- `.is_validate(json: Union[Dict[str, Any], List[Dict[str, Any]]], alias: bool = True)` - Провалидировать обьекты. `alias` добавить проверку по ключам, по умолчанию `True`. Возвращает `Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]`
+
+
+```python
+from wye.serializers import build_json
+```
+
+- `build_json(json: Union[Dict[str, Any], List[Dict[str, Any]]], rules: Type[BaseSerializer])` -
+Собирает `json` по правилам. Возвращает `Union[Dict[str, Any], List[Dict[str, Any]]]`
 
 ### Fields
 
@@ -394,27 +405,14 @@ from wye.serializers import fields
 ```
 
 Следующие аргументы:
-- `default: Any` - Дефолтное значение, работает если поле необязательное (`param_1: Optional[int]`), по умолчанию `None`
+- `default: Any` - дефолтное значение, работает если поле необязательное (`param_1: Optional[int]`), по умолчанию `None`
 - `alias: str` - публичное имя поля, по умолчанию `None`
+- `required: bool` - обязательный ли параметр
 
 1) Типы:
     - `fields.BOOL` - Булевое значение
     - `fields.STR` - Строка
     - `fields.INT` - Целочисленное число
     - `fields.FLOAT` - Число с плавающей точкой
-    - `fields.LIST` - Булевое значение
-    - `fields.SET` - Множество
-    - `fields.TUPLE` - Кортеж
-    - `fields.DICT` - словарь
-    - `fields.FROZENSET` - Неизменяемое множество
+    - `fields.SERIALIZER` - Вложенный сериализатор
     - `fields.BYTES` - байты
-    - `fields.UNION` - выбор
-
-2) Typing:
-    - `typing.List` - `fields.LIST`
-    - `typing.Tuple` - `fields.TUPLE`
-    - `typing.Set` - `fields.SET`
-    - `typing.Union` - `fields.UNION`
-    - `typing.Dict` - `fields.DICT`
-    - `typing.frozenset` - `fields.FROZENSET`
-    Входные данные - `int`, `str`, `bytes`, `dict`, `list`, `set`, `tuple`, `float`, `frozenset`, `bool`
