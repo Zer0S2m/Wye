@@ -10,11 +10,6 @@ struct Build;
 struct BuildFieldCheck;
 struct HistoryBuild;
 
-// Set error
-int *SetValidationError();
-int *SetAttributeError();
-int *SetValidationDefaultError();
-
 // Build json
 int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_check);
 int *CheckField(struct BuildFieldCheck build_field_check);
@@ -26,6 +21,7 @@ PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree);
 void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree);
 void FindAllKeysRawJson(PyObject *rules, PyObject *result, PyObject *path);
 int *BuildSingleField(struct Build build, PyObject *key_tree_element);
+void ClearReadyJsonFromEmptyDict(PyObject *ready_json);
 int *BuildJson(struct Build build, struct HistoryBuild *history_build);
 PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
@@ -43,3 +39,4 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args);
 #define IS_SERIALIZER_FIELD_KEY "IS_SERIALIZER"
 
 #define GET_RULES(rules) PySequence_GetItem(rules, 0)
+#define GET_RULES_SERIALIZER(rules) PyDict_GetItemString(rules, RULES_FIELD_KEY)

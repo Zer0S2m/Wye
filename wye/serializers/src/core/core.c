@@ -1,5 +1,7 @@
 #include <core/core.h>
 
+#include "error.c.h"
+
 
 struct Build {
     PyObject *raw_json; // in python -> dict
@@ -21,22 +23,6 @@ struct HistoryBuild {
     PyObject *keys_tree; // in python -> list
     int *is_any_nesting_in_key; // array
 };
-
-
-int *SetValidationError() {
-    PyErr_SetString(PyExc_TypeError, "<WyeSerializers>: Validation error");
-    return (int *) 0;
-}
-
-int *SetAttributeError() {
-    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Missing required parameters");
-    return (int *) 0;
-}
-
-int *SetValidationDefaultError() {
-    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Validation error: default value");
-    return (int *) 0;
-}
 
 
 /**
@@ -189,6 +175,8 @@ PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree) {
             break;
 
         part_ready_json = PyDict_GetItem(part_ready_json, key_tree_element);
+        if (!part_ready_json)
+            return NULL;
     }
 
     return part_ready_json;
@@ -289,6 +277,29 @@ int *BuildSingleField(struct Build build, PyObject *key_tree_element) {
 }
 
 
+void ClearReadyJsonFromEmptyDict(PyObject *ready_json) {
+    if (PyDict_Check(ready_json)) {
+        PyObject *keys = PyDict_Keys(ready_json);
+        PyObject *values = PyDict_Values(ready_json);
+
+        for (int i_key = 0; i_key < PyList_Size(keys); i_key++) {
+            PyObject *key = PyList_GetItem(keys, i_key);
+            PyObject *value = PyDict_GetItem(ready_json, key);
+            if (PyDict_Check(value)) {
+                if (PyObject_Length(value) == 0) {
+                    PyDict_DelItem(ready_json, key);
+                    PyErr_Clear();
+                }
+            }
+
+            PyObject *part_ready_json = PyList_GetItem(values, i_key);
+
+            ClearReadyJsonFromEmptyDict(part_ready_json);
+        }
+    }
+}
+
+
 /**
  * @brief
  *
@@ -347,11 +358,20 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
                 history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
                 if (is_any_nesting_in_key)
                     continue;
+
             } else if (history_build->is_any_nesting_in_key[i_key_tree])
                 continue;
 
             PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree);
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
+
+            if (!part_raw_json) {
+                PyObject *rules = GET_RULES(GET_RULES_SERIALIZER(part_rule));
+                if (PyObject_IsTrue(PyDict_GetItemString(rules, REQUIRED_FIELD_KEY)))
+                    return SetAttributeError();
+
+                continue;
+            }
 
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
 
@@ -359,6 +379,8 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
                 return NULL;
         }
     }
+
+    ClearReadyJsonFromEmptyDict(build.ready_json);
 
     return (int *) 1;
 }

@@ -55,7 +55,8 @@ class BaseSerializer(metaclass=MetaSerializer):
 		json: Union[Dict[str, Any], List[Dict[str, Any]]],
 		alias: bool = True
 	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
-		obj = wye_serializers.is_validate(json, self._rules)
+		rules = self._set_alias(alias)
+		obj = wye_serializers.is_validate(json, rules)
 		return obj
 
 	def _build_rules(self) -> Dict[str, Any]:
@@ -75,6 +76,15 @@ class BaseSerializer(metaclass=MetaSerializer):
 
 		final_serializer = self.__class__.__name__
 		return self.__fields__.get(final_serializer)
+
+	def _set_alias(
+		self,
+		is_alias: bool
+	) -> Dict[str, Any]:
+		if not is_alias:
+			return self._rules
+
+
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
