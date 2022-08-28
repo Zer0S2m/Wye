@@ -26,7 +26,7 @@ class MetaSerializer(type):
 						f"{field}": (rules, type_)
 					})
 
-				class_.__fields__.update({
+				class_.__serializers__.update({
 					f"{name}": fields
 				})
 
@@ -45,46 +45,35 @@ class MetaSerializer(type):
 
 
 class BaseSerializer(metaclass=MetaSerializer):
-	__fields__ = {}
+	__serializers__ = {}
 
 	def __init__(self) -> None:
 		self._rules = self._build_rules()
 
 	def is_validate(
 		self,
-		json: Union[Dict[str, Any], List[Dict[str, Any]]],
-		alias: bool = True
+		json: Union[Dict[str, Any], List[Dict[str, Any]]]
 	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
-		rules = self._set_alias(alias)
-		obj = wye_serializers.is_validate(json, rules)
+		obj = wye_serializers.is_validate(json, self._rules)
 		return obj
 
 	def _build_rules(self) -> Dict[str, Any]:
-		for serializer_name, fields in self.__fields__.items():
+		for serializer_name, fields in self.__serializers__.items():
 			for field, rules in fields.items():
 				type_ = None
 				if isinstance(rules, tuple):
 					type_ = rules[1]
 				elif isinstance(rules, dict):
-					type_ = rules[f"{RULES}"][1]
+					type_ = rules[RULES][1]
 
 				if issubclass(type_, BaseSerializer):
-					self.__fields__[serializer_name][field] = {
-						**self.__fields__[type_.__name__],
+					self.__serializers__[serializer_name][field] = {
+						**self.__serializers__[type_.__name__],
 						f"{RULES}": (*rules,)
 					}
 
 		final_serializer = self.__class__.__name__
-		return self.__fields__.get(final_serializer)
-
-	def _set_alias(
-		self,
-		is_alias: bool
-	) -> Dict[str, Any]:
-		if not is_alias:
-			return self._rules
-
-
+		return self.__serializers__.get(final_serializer)
 
 	def __call__(self) -> Dict[str, Any]:
 		return self._rules
