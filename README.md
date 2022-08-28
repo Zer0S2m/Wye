@@ -388,7 +388,7 @@ class Serializer_2(Serializer):
 ```
 
 Методы:
-- `.is_validate(json: Union[Dict[str, Any], List[Dict[str, Any]]], alias: bool = True)` - Провалидировать обьекты. `alias` добавить проверку по ключам, по умолчанию `True`. Возвращает `Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]`
+- `.is_validate(json: Union[Dict[str, Any], List[Dict[str, Any]]])` - Провалидировать обьекты. Возвращает `Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]`
 
 
 ```python
