@@ -7,6 +7,7 @@
 
 
 struct Build;
+struct KeysTreeList;
 struct BuildFieldCheck;
 struct HistoryBuild;
 
@@ -19,7 +20,7 @@ PyObject *GetParamFromLevelKeys(PyObject *keys_level);
 PyObject *GetPartRule(PyObject *rules, PyObject *key_tree);
 PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree);
 void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree);
-void FindAllKeysRawJson(PyObject *rules, PyObject *result, PyObject *path);
+void FindAllKeysRawJson(PyObject *rules, struct KeysTreeList *keys_tree_list, PyObject *path, PyObject *alias_path);
 int *BuildSingleField(struct Build build, PyObject *key_tree_element);
 void ClearReadyJsonFromEmptyDict(PyObject *ready_json);
 int *BuildJson(struct Build build, struct HistoryBuild *history_build);
