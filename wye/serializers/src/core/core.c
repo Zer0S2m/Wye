@@ -174,11 +174,8 @@ PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree) {
     PyObject *part_ready_json = ready_json;
     Py_ssize_t length_key_rule = PyList_Size(key_tree);
 
-    for (int i_key_tree = 0; i_key_tree < length_key_rule; i_key_tree++) {
+    for (int i_key_tree = 0; i_key_tree < length_key_rule - 1; i_key_tree++) {
         PyObject *key_tree_element = PyList_GetItem(key_tree, i_key_tree);
-
-        if (i_key_tree == length_key_rule - 1)
-            break;
 
         part_ready_json = PyDict_GetItem(part_ready_json, key_tree_element);
         if (!part_ready_json)
@@ -341,13 +338,14 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
     if (!build.is_history) {
         FindAllKeysRawJson(build.rules, &keys_tree_list, PyList_New(0), PyList_New(0));
         history_build->keys_tree = keys_tree;
+        history_build->keys_tree_alias = keys_tree_alias;
         history_build->is_any_nesting_in_key = (int *) malloc(sizeof(int) * PyList_Size(keys_tree) - 1);
     } else {
         keys_tree = history_build->keys_tree;
         keys_tree_alias = history_build->keys_tree_alias;
     }
 
-    BuildInitialAssemblyReadyJson(build.ready_json, keys_tree);
+    BuildInitialAssemblyReadyJson(build.ready_json, keys_tree_alias);
 
     for (int i_key_tree = 0; i_key_tree < PyList_Size(keys_tree); i_key_tree++) {
         PyObject *key_tree = PyList_GetItem(keys_tree, i_key_tree);
@@ -393,7 +391,9 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
             } else if (history_build->is_any_nesting_in_key[i_key_tree])
                 continue;
 
-            PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree);
+            PyObject *key_tree_alias = PyList_GetItem(keys_tree_alias, i_key_tree);
+            PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree_alias);
+
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
 
             if (!part_raw_json) {
