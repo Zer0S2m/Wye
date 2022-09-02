@@ -1,102 +1,103 @@
 from typing import (
-	List, Tuple, Sequence
+    List, Tuple, Sequence
 )
 import re
 
 from wye.types import (
-	Scope, ASGIInstance, ASGIApp
+    Scope, ASGIInstance, ASGIApp
 )
 from wye.response import Response
 
 
 class Route:
-	def matches(
-		self,
-		scope: Scope
-	) -> Tuple[bool, Scope]:
-		raise NotImplementedError()
+    def matches(
+        self,
+        scope: Scope
+    ) -> Tuple[bool, Scope]:
+        raise NotImplementedError()
 
-	def __call__(
-		self,
-		scope: Scope
-	) -> ASGIInstance:
-		raise NotImplementedError()
+    def __call__(
+        self,
+        scope: Scope
+    ) -> ASGIInstance:
+        raise NotImplementedError()
 
 
 class Path(Route):
-	def __init__(
-		self,
-		path: str,
-		app: ASGIApp,
-		methods: Sequence[str] = (),
-		protocol: str = None,
-		is_path_prefix: bool =  False
-	) -> None:
-		self.path = path
-		self.app = app
-		self.protocol = protocol
-		self.methods = methods
-		self.is_path_prefix = is_path_prefix
+    def __init__(
+        self,
+        path: str,
+        app: ASGIApp,
+        methods: Sequence[str] = (),
+        protocol: str = None,
+        is_path_prefix: bool = False
+    ) -> None:
+        self.path = path
+        self.app = app
+        self.protocol = protocol
+        self.methods = methods
+        self.is_path_prefix = is_path_prefix
 
-		self.set_path_regex(path)
+        self.set_path_regex(path)
 
-	def set_path_regex(
-		self,
-		path: str
-	) -> None:
-		if not self.is_path_prefix:
-			regex = f"^{path}$"
-		else:
-			regex = f"^{path}"
+    def set_path_regex(
+        self,
+        path: str
+    ) -> None:
+        if not self.is_path_prefix:
+            regex = f"^{path}$"
+        else:
+            regex = f"^{path}"
 
-		regex = re.sub("{([a-zA-Z_][a-zA-Z0-9_]*)}", r"(?P<\1>[^/]+)", regex)
-		self.path_regex = re.compile(regex)
+        regex = re.sub("{([a-zA-Z_][a-zA-Z0-9_]*)}", r"(?P<\1>[^/]+)", regex)
+        self.path_regex = re.compile(regex)
 
-	def matches(
-		self,
-		scope: Scope
-	) -> Tuple[bool, Scope]:
-		if self.protocol is None or scope["type"] == self.protocol:
-			match = self.path_regex.match(scope["path"])
-			if match:
-				kwargs = dict(scope.get("kwargs", {}))
-				kwargs.update(match.groupdict())
-				child_scope = dict(scope)
-				child_scope["kwargs"] = kwargs
-				return True, child_scope
+    def matches(
+        self,
+        scope: Scope
+    ) -> Tuple[bool, Scope]:
+        if self.protocol is None or scope["type"] == self.protocol:
+            match = self.path_regex.match(scope["path"])
+            if match:
+                kwargs = dict(scope.get("kwargs", {}))
+                kwargs.update(match.groupdict())
+                child_scope = dict(scope)
+                child_scope["kwargs"] = kwargs
+                return True, child_scope
 
-		return False, {}
+        return False, {}
 
-	def __call__(
-		self,
-		scope: Scope
-	) -> ASGIInstance:
-		if self.methods and scope["method"] not in self.methods:
-			return Response("Method not allowed", 406, media_type = "text/plain")
+    def __call__(
+        self,
+        scope: Scope
+    ) -> ASGIInstance:
+        if self.methods and scope["method"] not in self.methods:
+            return Response("Method not allowed", 406,
+                            media_type="text/plain")
 
-		return self.app(scope)
+        return self.app(scope)
 
 
 class Router:
-	def __init__(
-		self,
-		routes: List[Route]
-	) -> None:
-		self.routes = routes
+    def __init__(
+        self,
+        routes: List[Route]
+    ) -> None:
+        self.routes = routes
 
-	def __call__(
-		self,
-		scope: Scope
-	) -> ASGIInstance:
-		for route in self.routes:
-			matched, child = route.matches(scope)
-			if matched:
-				return route(child)
+    def __call__(
+        self,
+        scope: Scope
+    ) -> ASGIInstance:
+        for route in self.routes:
+            matched, child = route.matches(scope)
+            if matched:
+                return route(child)
 
-		return self.not_found(scope)
+        return self.not_found(scope)
 
-	def not_found(
-		self,
-		scope: Scope
-	) -> ASGIInstance:
-		return Response("Not found", 404, media_type = "text/plain")
+    def not_found(
+        self,
+        scope: Scope
+    ) -> ASGIInstance:
+        return Response("Not found", 404, media_type="text/plain")

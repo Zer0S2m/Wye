@@ -1,6 +1,6 @@
 from typing import (
-	Dict, Any, List,
-	Tuple, Union
+    Dict, Any, List,
+    Tuple, Union
 )
 
 from wye.serializers.fields import ALIAS
@@ -12,72 +12,72 @@ RULES = "RULES"
 
 
 class MetaSerializer(type):
-	def __new__(cls, name, bases, namespace):
-		for class_ in bases:
-			if issubclass(class_, BaseSerializer):
-				annotations = namespace.get('__annotations__')
-				if not annotations:
-					break
-				fields = {}
-				for field, type_ in annotations.items():
-					rules = namespace.get(field)()
-					cls.__set_alias_rules(field, rules)
-					fields.update({
-						f"{field}": (rules, type_)
-					})
+    def __new__(cls, name, bases, namespace):
+        for class_ in bases:
+            if issubclass(class_, BaseSerializer):
+                annotations = namespace.get('__annotations__')
+                if not annotations:
+                    break
+                fields = {}
+                for field, type_ in annotations.items():
+                    rules = namespace.get(field)()
+                    cls.__set_alias_rules(field, rules)
+                    fields.update({
+                        f"{field}": (rules, type_)
+                    })
 
-				class_.__serializers__.update({
-					f"{name}": fields
-				})
+                class_.__serializers__.update({
+                    f"{name}": fields
+                })
 
-		return super().__new__(cls, name, bases, namespace)
+        return super().__new__(cls, name, bases, namespace)
 
-	@classmethod
-	def __set_alias_rules(
-		cls,
-		field: str,
-		rules: Dict[str, Any]
-	) -> None:
-		if not rules[ALIAS]:
-			rules.update({
-				f"{ALIAS}": field
-			})
+    @classmethod
+    def __set_alias_rules(
+        cls,
+        field: str,
+        rules: Dict[str, Any]
+    ) -> None:
+        if not rules[ALIAS]:
+            rules.update({
+                f"{ALIAS}": field
+            })
 
 
 class BaseSerializer(metaclass=MetaSerializer):
-	__serializers__ = {}
+    __serializers__ = {}
 
-	def __init__(self) -> None:
-		self._rules = self._build_rules()
+    def __init__(self) -> None:
+        self._rules = self._build_rules()
 
-	def is_validate(
-		self,
-		json: Union[Dict[str, Any], List[Dict[str, Any]]]
-	) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
-		obj = wye_serializers.is_validate(json, self._rules)
-		return obj
+    def is_validate(
+        self,
+        json: Union[Dict[str, Any], List[Dict[str, Any]]]
+    ) -> Tuple[bool, Union[Dict[str, Any], List[Dict[str, Any]]]]:
+        obj = wye_serializers.is_validate(json, self._rules)
+        return obj
 
-	def _build_rules(self) -> Dict[str, Any]:
-		for serializer_name, fields in self.__serializers__.items():
-			for field, rules in fields.items():
-				type_ = None
-				if isinstance(rules, tuple):
-					type_ = rules[1]
-				elif isinstance(rules, dict):
-					type_ = rules[RULES][1]
+    def _build_rules(self) -> Dict[str, Any]:
+        for serializer_name, fields in self.__serializers__.items():
+            for field, rules in fields.items():
+                type_ = None
+                if isinstance(rules, tuple):
+                    type_ = rules[1]
+                elif isinstance(rules, dict):
+                    type_ = rules[RULES][1]
 
-				if issubclass(type_, BaseSerializer):
-					self.__serializers__[serializer_name][field] = {
-						**self.__serializers__[type_.__name__],
-						f"{RULES}": (*rules,)
-					}
+                if issubclass(type_, BaseSerializer):
+                    self.__serializers__[serializer_name][field] = {
+                        **self.__serializers__[type_.__name__],
+                        f"{RULES}": (*rules,)
+                    }
 
-		final_serializer = self.__class__.__name__
-		return self.__serializers__.get(final_serializer)
+        final_serializer = self.__class__.__name__
+        return self.__serializers__.get(final_serializer)
 
-	def __call__(self) -> Dict[str, Any]:
-		return self._rules
+    def __call__(self) -> Dict[str, Any]:
+        return self._rules
 
 
 class Serializer(BaseSerializer):
-	"""Main serailizer"""
+    """Main serailizer"""
