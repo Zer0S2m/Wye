@@ -5,7 +5,7 @@ import json
 import os
 
 from wye.types import (
-	Send, Receive
+    Send, Receive
 )
 from wye.utils.aiofile import AsyncFile
 from wye.utils.sets import set_header
@@ -14,58 +14,60 @@ from wye.utils.parser import create_path
 
 
 class Response:
-	media_type = None
-	charset = "utf-8"
+    media_type = None
+    charset = "utf-8"
 
-	def __init__(
-		self,
-		content: Any,
-		status_code: int = 200,
-		media_type: Optional[str] = None,
-	) -> None:
-		self.body = self.render(content)
-		self.status_code = status_code
+    def __init__(
+        self,
+        content: Any,
+        status_code: int = 200,
+        media_type: Optional[str] = None,
+    ) -> None:
+        self.body = self.render(content)
+        self.status_code = status_code
 
-		if media_type is not None:
-			self.media_type = media_type
+        if media_type is not None:
+            self.media_type = media_type
 
-		self.init_headers()
+        self.init_headers()
 
-	def render(
-		self,
-		content: Any
-	) -> bytes:
-		if isinstance(content, bytes):
-			return content
-		return content.encode(self.charset)
+    def render(
+        self,
+        content: Any
+    ) -> bytes:
+        if isinstance(content, bytes):
+            return content
+        return content.encode(self.charset)
 
-	def init_headers(self) -> None:
-		self.headers = []
+    def init_headers(self) -> None:
+        self.headers = []
 
-		if hasattr(self, "body") and self.body:
-			self.headers.append(set_header("content-length", f"{len(self.body)}"))
-		if hasattr(self, "media_type") and self.media_type:
-			content_type = self.media_type
-			if content_type.startswith("text/"):
-				content_type += f"; charset={self.charset.upper()}"
+        if hasattr(self, "body") and self.body:
+            self.headers.append(
+                set_header("content-length", f"{len(self.body)}")
+            )
+        if hasattr(self, "media_type") and self.media_type:
+            content_type = self.media_type
+            if content_type.startswith("text/"):
+                content_type += f"; charset={self.charset.upper()}"
 
-			self.headers.append(set_header("content-type", content_type))
+            self.headers.append(set_header("content-type", content_type))
 
-	async def __call__(
-		self,
-		receive: Receive,
-		send: Send
-	) -> None:
-		await send({
-			"type": "http.response.start",
-			"status": self.status_code,
-			"headers": self.headers
-		})
-		await send({
-			"type": "http.response.body",
-			"status": self.status_code,
-			"body": self.body
-		})
+    async def __call__(
+        self,
+        receive: Receive,
+        send: Send
+    ) -> None:
+        await send({
+            "type": "http.response.start",
+            "status": self.status_code,
+            "headers": self.headers
+        })
+        await send({
+            "type": "http.response.body",
+            "status": self.status_code,
+            "body": self.body
+        })
 
 
 class HTMLResponse(Response):
@@ -77,116 +79,122 @@ class PlainTextResponse(Response):
 
 
 class JSONResponse(Response):
-	media_type = "application/json"
+    media_type = "application/json"
 
-	def render(
-		self,
-		content: dict
-	) -> bytes:
-		return json.dumps(content).encode("utf-8")
+    def render(
+        self,
+        content: dict
+    ) -> bytes:
+        return json.dumps(content).encode("utf-8")
 
 
 class StreamingResponse(Response):
-	def __init__(
-		self,
-		content: Any,
-		status_code: int = 200,
-		media_type: Optional[str] = None
-	) -> None:
-		self.iterator = content
-		self.status_code = status_code
+    def __init__(
+        self,
+        content: Any,
+        status_code: int = 200,
+        media_type: Optional[str] = None
+    ) -> None:
+        self.iterator = content
+        self.status_code = status_code
 
-		if media_type is not None:
-			self.media_type = media_type
+        if media_type is not None:
+            self.media_type = media_type
 
-		self.init_headers()
+        self.init_headers()
 
-	async def __call__(
-		self,
-		receive: Receive,
-		send: Send
-	) -> None:
-		await send({
-			"type": "http.response.start",
-			"status": self.status_code,
-			"headers": self.headers
-		})
+    async def __call__(
+        self,
+        receive: Receive,
+        send: Send
+    ) -> None:
+        await send({
+            "type": "http.response.start",
+            "status": self.status_code,
+            "headers": self.headers
+        })
 
-		async for body in self.iterator:
-			if not isinstance(body, bytes):
-				body = body.encode(self.charset)
+        async for body in self.iterator:
+            if not isinstance(body, bytes):
+                body = body.encode(self.charset)
 
-			await send({
-				"type": "http.response.body",
-				"body": body,
-				"more_body": True
-			})
+            await send({
+                "type": "http.response.body",
+                "body": body,
+                "more_body": True
+            })
 
-		await send({
-			"type": "http.response.body",
-			"body": b"",
-			"more_body": False
-		})
+        await send({
+            "type": "http.response.body",
+            "body": b"",
+            "more_body": False
+        })
 
 
 class FileResponse(Response):
-	chunk_size = 4096
+    chunk_size = 4096
 
-	def __init__(
-		self,
-		file_name: str,
-		path: Optional[str] = None,
-		media_type: Optional[str] = None
-	) -> None:
-		self.file_name = file_name
-		self.path = path
-		self.status_code = 200
-		if media_type is None:
-			self.media_type = guess_type(self.file_name or self.path)[0] or "text/plain"
-		else:
-			self.media_type = media_type
+    def __init__(
+        self,
+        file_name: str,
+        path: Optional[str] = None,
+        media_type: Optional[str] = None
+    ) -> None:
+        self.file_name = file_name
+        self.path = path
+        self.status_code = 200
+        if media_type is None:
+            self.media_type = guess_type(self.file_name or self.path)[0] or \
+                "text/plain"
+        else:
+            self.media_type = media_type
 
-		self.set_path()
-		self.init_headers()
-		self.set_stat_headers()
+        self.set_path()
+        self.init_headers()
+        self.set_stat_headers()
 
-	def set_stat_headers(self) -> None:
-		stat = os.stat(self.path)
+    def set_stat_headers(self) -> None:
+        stat = os.stat(self.path)
 
-		self.headers.append(set_header("content-disposition", f'attachment; filename="{self.file_name}"'))
-		self.headers.append(set_header("content-length", f"{stat.st_size}"))
-		self.headers.append(set_header("last-modified", formatdate(stat.st_ctime)))
+        self.headers.append(
+            set_header("content-disposition",
+                       f'attachment; filename="{self.file_name}"'))
+        self.headers.append(set_header("content-length", f"{stat.st_size}"))
+        self.headers.append(set_header("last-modified",
+                                       formatdate(stat.st_ctime)))
 
-	def set_path(self) -> None:
-		if self.path:
-			parts_path = list(self.path.split(r"/"))
-			path = create_path(*parts_path, self.file_name)
-		else:
-			path = create_path(self.file_name)
+    def set_path(self) -> None:
+        if self.path:
+            parts_path = list(self.path.split(r"/"))
+            path = create_path(*parts_path, self.file_name)
+        else:
+            path = create_path(self.file_name)
 
-		self.path = path
-		self.check_path()
+        self.path = path
+        self.check_path()
 
-	def check_path(self) -> None:
-		if not check_isfile(self.path):
-			raise RuntimeError(f"StaticFile at path '{self.path}' does not exist.")
+    def check_path(self) -> None:
+        if not check_isfile(self.path):
+            raise RuntimeError(
+                f"StaticFile at path '{self.path}' does not exist."
+            )
 
-	async def __call__(
-		self,
-		receive: Receive,
-		send: Send
-	) -> None:
-		await send({
-			"type": "http.response.start",
-			"status": self.status_code,
-			"headers": self.headers
-		})
-		async with AsyncFile(self.path, open_flag = "rb") as file:
-			async for body in file.read_by_chunk(self.chunk_size):
-				more_body = len(body) == self.chunk_size
+    async def __call__(
+        self,
+        receive: Receive,
+        send: Send
+    ) -> None:
+        await send({
+            "type": "http.response.start",
+            "status": self.status_code,
+            "headers": self.headers
+        })
+        async with AsyncFile(self.path, open_flag="rb") as file:
+            async for body in file.read_by_chunk(self.chunk_size):
+                more_body = len(body) == self.chunk_size
 
-				await send({
-					"type": "http.response.body",
-					"more_body": more_body,
-					"body": body
-				})
+                await send({
+                    "type": "http.response.body",
+                    "more_body": more_body,
+                    "body": body
+                })
