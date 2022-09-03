@@ -375,16 +375,21 @@ from wye.serializers import Serializer
 from wye.serializers import fields
 
 
-class Serializer_1(Serializer):
+class Serializer1(Serializer):
     param_1: int = fields.INT(default = 10, alias = "param1")
     param_2: str = fields.STR(alias = "param2")
     param_3: float = fields.FLOAT()
     param_4: bool = fields.BOOL(alias = "param4")
 
 
-class Serializer_2(Serializer):
+class Serializer2(Serializer):
     param_1: Serializer_1 = fields.SERIALIZER(alias = "param1")
     param_2: int = fields.INT(alias = "param2")
+
+
+class Serializer3(Serializer2):
+    param_3: Serializer2 = fields.SERIALIZER(alias = "param3")
+    param_4: int = fields.INT(alias = "param4")
 ```
 
 Методы:
