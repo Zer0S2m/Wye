@@ -1,6 +1,6 @@
 from typing import (
     Mapping, Any, Callable,
-    Awaitable
+    Awaitable, Dict
 )
 
 
@@ -12,3 +12,5 @@ Send = Callable[[Message], Awaitable[None]]
 
 ASGIInstance = Callable[[Receive, Send], Awaitable[None]]
 ASGIApp = Callable[[Scope], ASGIInstance]
+
+JSON = Dict[str, Any]

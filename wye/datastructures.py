@@ -81,7 +81,8 @@ class URL(str):
 
     @property
     def path(self) -> str:
-        return f'/{re.match(self._reg_full_path, self._url).group(1).split(r"/", 1)[-1]}'
+        return \
+            f'/{re.match(self._reg_full_path, self._url).group(1).split(r"/", 1)[-1]}'
 
     @property
     def netloc(self) -> str:
