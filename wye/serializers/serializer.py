@@ -53,6 +53,7 @@ class Serializer(metaclass=MetaSerializer):
     """Main serailizer"""
 
     __serializers__ = {}
+    __build_serializers__ = {}
     __fields__ = {}
 
     def __init__(self) -> None:
@@ -74,11 +75,15 @@ class Serializer(metaclass=MetaSerializer):
                 elif isinstance(rules, dict):
                     type_ = rules[RULES][1]
 
-                if issubclass(type_, Serializer):
+                if issubclass(type_, Serializer) and \
+                   f"{field}__{serializer_name}" not in self.__build_serializers__:
                     self.__serializers__[serializer_name][field] = {
                         **self.__serializers__[type_.__name__],
                         f"{RULES}": (*rules,)
                     }
+                    self.__build_serializers__[
+                        f"{field}__{serializer_name}"
+                    ] = True
 
         final_serializer = self.__class__.__name__
         return self.__serializers__.get(final_serializer)
