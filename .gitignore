@@ -43,6 +43,7 @@ venv.bak/
 # custom
 media/
 .vscode
+.idea
 wye_serializers.egg-info/
 
 # build
