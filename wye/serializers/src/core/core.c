@@ -1,6 +1,7 @@
 #include <core/core.h>
 
 #include "error.c.h"
+#include "validators.c.h"
 
 
 struct Build {
@@ -93,8 +94,11 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
         return (int *) 1;
     }
 
+    PyObject *validators = PyDict_GetItemString(build_field_check.rule, VALIDATORS_FIELD_KEY);
+    PyObject *new_value = RunValidators(build_field_check.raw_json_obj, validators);
+
     PyObject *alias = PyDict_GetItemString(build_field_check.rule, ALIAS_FIELD_KEY);
-    PyDict_SetItem(build.ready_json, alias, build_field_check.raw_json_obj);
+    PyDict_SetItem(build.ready_json, alias, new_value);
 
     return (int *) 1;
 }
@@ -398,10 +402,15 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
 
             if (!part_raw_json) {
                 PyObject *rules = GET_RULES(GET_RULES_SERIALIZER(part_rule));
-                if (PyObject_IsTrue(PyDict_GetItemString(rules, REQUIRED_FIELD_KEY)))
-                    return SetAttributeError();
-
-                continue;
+                PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
+                if (default_value == Py_None && !PyDict_Check(default_value) &&
+                    PyObject_IsTrue(PyDict_GetItemString(rules, REQUIRED_FIELD_KEY)))
+                        return SetAttributeError();
+                else if (default_value != Py_None && PyDict_Check(default_value)) {
+                    if (length_key_tree == SINGLE_LEVEL_JSON)
+                        PyDict_SetItem(build.raw_json, param_title, default_value);
+                    part_raw_json = default_value;
+                }
             }
 
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
@@ -476,6 +485,8 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
         if (!BuildJson(build, &history_build))
             return NULL;
     }
+
+    free(history_build.is_any_nesting_in_key);
 
     return build.ready_json;
 }

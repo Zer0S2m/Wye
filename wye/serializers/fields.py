@@ -1,5 +1,6 @@
 from typing import (
-    Any, Dict, Optional
+    Any, Dict, Optional,
+    Callable, List
 )
 
 
@@ -8,6 +9,7 @@ TYPE = "TYPE"
 DEFAULT = "DEFAULT"
 REQUIRED = "REQUIRED"
 IS_SERIALIZER = "IS_SERIALIZER"
+VALIDATORS = "VALIDATORS"
 
 
 class BaseField:
@@ -19,11 +21,13 @@ class BaseField:
         default: Any = None,
         *,
         alias: Optional[str] = None,
-        required: bool = True
+        required: bool = True,
+        validators: List[Callable[[Any], Any]] = []
     ) -> None:
         self._default = default
         self._alias = alias
         self._required = required
+        self._validators = validators
 
     def _build_rules(self) -> Dict[str, Any]:
         rules = {}
@@ -32,6 +36,7 @@ class BaseField:
         rules[DEFAULT] = self._default
         rules[REQUIRED] = self._required
         rules[IS_SERIALIZER] = self.__is_serializer__
+        rules[VALIDATORS] = self._validators
 
         return rules
 

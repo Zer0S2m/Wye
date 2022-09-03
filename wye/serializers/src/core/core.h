@@ -37,7 +37,10 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args);
 #define ALIAS_FIELD_KEY "ALIAS"
 #define DEFAULT_FIELD_KEY "DEFAULT"
 #define REQUIRED_FIELD_KEY "REQUIRED"
+#define VALIDATORS_FIELD_KEY "VALIDATORS"
 #define IS_SERIALIZER_FIELD_KEY "IS_SERIALIZER"
+
+#define SINGLE_LEVEL_JSON 2
 
 #define GET_RULES(rules) PySequence_GetItem(rules, 0)
 #define GET_RULES_SERIALIZER(rules) PyDict_GetItemString(rules, RULES_FIELD_KEY)
