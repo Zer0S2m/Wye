@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+
+recursive-include source *.h
+
+global-exclude __pycache__

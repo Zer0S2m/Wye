@@ -1,10 +1,27 @@
+import os
+
 from setuptools import (
     setup, Extension
 )
 
 
-with open("README.md", "r", encoding="utf-8") as f:
-    readme = f.read()
+def get_long_description():
+    """
+    Return the README.
+    """
+    with open("README.md", encoding="utf8") as f:
+        return f.read()
+
+
+def get_packages(package):
+    """
+    Return root package and all sub-packages.
+    """
+    return [
+        dirpath
+        for dirpath, dirnames, filenames in os.walk(package)
+        if os.path.exists(os.path.join(dirpath, "__init__.py"))
+    ]
 
 
 def install_wye():
@@ -14,11 +31,10 @@ def install_wye():
         author="Aleksandr Silkin",
         description="Lightweight ASGI Library",
         package_dir={"wye": "wye"},
-        packages=["wye"],
-        package_data={"": ["LICENSE"]},
+        packages=get_packages("wye"),
         include_package_data=True,
-        python_requires=">=3.9",
-        long_description=readme,
+        python_requires=">=3.7",
+        long_description=get_long_description(),
         long_description_content_type="text/markdown",
         project_urls={
             "Documentation": "https://github.com/Zer0S2m/Wye",
