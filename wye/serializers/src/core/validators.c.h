@@ -1,5 +1,6 @@
 // Run validators
 PyObject *RunValidators(PyObject *value, PyObject *validators);
+PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree);
 
 
 /**
@@ -17,4 +18,21 @@ PyObject *RunValidators(PyObject *value, PyObject *validators) {
     }
 
     return new_value;
+}
+
+
+/**
+ * @brief
+ *
+ * @param keys_tree in python -> List[str]
+ * @return PyObject*
+ */
+PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree) {
+    PyObject *new_path = PyList_GetSlice(
+        keys_tree,
+        0,
+        PyList_Size(keys_tree) - 1
+    );
+    new_path = PyUnicode_Join(PyUnicode_FromString("--"), new_path);
+    return new_path;
 }

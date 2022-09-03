@@ -29,6 +29,10 @@ static PyObject *method_build_json(PyObject *self, PyObject *args);
 static PyObject *method_is_validate(PyObject *self, PyObject *args);
 
 
+#define RESET_COLOR "\033[0m"
+#define GREEN_COLOR "\033[32m"
+#define RED_COLOR "\033[31m"
+
 #define RULES_FIELD_KEY "RULES"
 #define PY_RULES_FIELD_KEY PyUnicode_FromString(RULES_FIELD_KEY)
 #define TYPE_OBJ_FIELD_KEY "type"
@@ -43,4 +47,5 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args);
 #define SINGLE_LEVEL_JSON 2
 
 #define GET_RULES(rules) PySequence_GetItem(rules, 0)
+#define GET_TYPE(rules) PySequence_GetItem(rules, 1)
 #define GET_RULES_SERIALIZER(rules) PyDict_GetItemString(rules, RULES_FIELD_KEY)

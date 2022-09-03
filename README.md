@@ -413,6 +413,18 @@ from wye.serializers import fields
 - `default: Any` - дефолтное значение, работает если поле необязательное (`param_1: Optional[int]`), по умолчанию `None`
 - `alias: str` - публичное имя поля, по умолчанию `None`
 - `required: bool` - обязательный ли параметр
+- `validators: Callable[[Any], Any]` - валидаторы, принимают один параметр, пример:
+
+    ```python
+    from wye.serializers import Serializer
+    from wye.serializers import fields
+
+    def validator(value):
+        return value * 10
+
+    class Serializer2(Serializer):
+        param_1: int = fields.INT(validators=[validator])
+    ```
 
 1) Типы:
     - `fields.BOOL` - Булевое значение

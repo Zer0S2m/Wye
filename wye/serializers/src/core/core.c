@@ -1,19 +1,20 @@
 #include <core/core.h>
 
+#include "logs.c.h"
 #include "error.c.h"
 #include "validators.c.h"
 
 
 struct Build {
-    PyObject *raw_json; // in python -> dict
-    PyObject *ready_json; // in python -> dict
-    PyObject *rules; // in python -> dict
+    PyObject *raw_json; // in python -> Dict[str, Any]
+    PyObject *ready_json; // in python -> Dict[str, Any]
+    PyObject *rules; // in python -> Dict[str, Any]
     int is_history;
 };
 
 struct KeysTreeList {
-    PyObject *keys_tree; // in python -> list
-    PyObject *keys_tree_alias; // in python -> list
+    PyObject *keys_tree; // in python -> List[str]
+    PyObject *keys_tree_alias; // in python -> List[str]
 };
 
 struct BuildFieldCheck {
@@ -24,10 +25,11 @@ struct BuildFieldCheck {
 
 // For optimization
 struct HistoryBuild {
-    PyObject *keys_tree_param_title; // in python -> list
+    PyObject *keys_tree_param_title; // in python -> List[str]
     PyObject *part_rule; // in python -> list
-    PyObject *keys_tree; // in python -> list
-    PyObject *keys_tree_alias; // in python -> list
+    PyObject *keys_tree; // in python -> List[str]
+    PyObject *keys_tree_alias; // in python -> List[str]
+    PyObject *run_validators; // in python -> Dict[str, bool]
     int *is_any_nesting_in_key; // array
 };
 
@@ -397,11 +399,12 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
 
             PyObject *key_tree_alias = PyList_GetItem(keys_tree_alias, i_key_tree);
             PyObject *part_ready_json = GetPartReadyJson(build.ready_json, key_tree_alias);
+            PyObject *rules_params = GET_RULES_SERIALIZER(part_rule);
+            PyObject *rules = GET_RULES(rules_params);
 
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
 
             if (!part_raw_json) {
-                PyObject *rules = GET_RULES(GET_RULES_SERIALIZER(part_rule));
                 PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
                 if (default_value == Py_None && !PyDict_Check(default_value) &&
                     PyObject_IsTrue(PyDict_GetItemString(rules, REQUIRED_FIELD_KEY)))
@@ -411,6 +414,16 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
                         PyDict_SetItem(build.raw_json, param_title, default_value);
                     part_raw_json = default_value;
                 }
+            }
+
+            PyObject *validators = PyDict_GetItemString(rules, VALIDATORS_FIELD_KEY);
+            if (PySequence_Length(validators) > 0) {
+                PyObject *type_serializer = GET_TYPE(rules_params);
+                PyObject *path_to_serializer_dict = SplitKeysTreeRunValidatorDict(key_tree);
+                if (!PyDict_GetItem(history_build->run_validators, path_to_serializer_dict))
+                    PyDict_SetItem(history_build->run_validators, path_to_serializer_dict, Py_True);
+                else
+                    part_raw_json = RunValidators(part_raw_json, validators);
             }
 
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
@@ -468,7 +481,13 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "OO", &raw_json, &build.rules))
         return NULL;
 
-    struct HistoryBuild history_build = { PyList_New(0), PyList_New(0), PyList_New(0), PyList_New(0) };
+    struct HistoryBuild history_build = {
+        PyList_New(0),
+        PyList_New(0),
+        PyList_New(0),
+        PyList_New(0),
+        PyDict_New()
+    };
     build.is_history = 0;
 
     build.ready_json = PyDict_New();
