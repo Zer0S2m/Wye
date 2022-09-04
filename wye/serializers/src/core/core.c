@@ -412,11 +412,10 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
                 if (default_value == Py_None && !PyDict_Check(default_value) &&
                     PyObject_IsTrue(PyDict_GetItemString(rules, REQUIRED_FIELD_KEY)))
                         return SetAttributeError();
-                else if (default_value != Py_None && PyDict_Check(default_value)) {
-                    if (length_key_tree == SINGLE_LEVEL_JSON)
-                        PyDict_SetItem(build.raw_json, param_title, default_value);
+                else if (default_value != Py_None && PyDict_Check(default_value))
                     part_raw_json = default_value;
-                }
+                else
+                    continue;
             }
 
             PyObject *validators = PyDict_GetItemString(rules, VALIDATORS_FIELD_KEY);
