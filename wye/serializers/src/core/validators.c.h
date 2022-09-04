@@ -2,8 +2,9 @@
 PyObject *RunValidators(PyObject *value, PyObject *validators);
 PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree);
 
-int *ValidationMaxLengthValue(PyObject *py_value, PyObject *max_length);
-int *ValidationMinLengthValue(PyObject *py_value, PyObject *min_length);
+int *ValidationMaxLengthValueNumber(PyObject *py_value, PyObject *max_length);
+int *ValidationMinLengthValueNumber(PyObject *py_value, PyObject *min_length);
+int *_CheckMaxMinLength(PyObject *max_length, PyObject *min_length, PyObject *py_value);
 int *CheckMaxMinLength(PyObject *rule, PyObject *py_value);
 
 
@@ -49,7 +50,7 @@ PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree) {
  * @param max_length in python -> int
  * @return int*
  */
-int *ValidationMaxLengthValue(PyObject *py_value, PyObject *max_length) {
+int *ValidationMaxLengthValueNumber(PyObject *py_value, PyObject *max_length) {
     if (!PyObject_RichCompareBool(max_length, py_value, Py_GE))
         return (int *) 0;
     return (int *) 1;
@@ -63,9 +64,31 @@ int *ValidationMaxLengthValue(PyObject *py_value, PyObject *max_length) {
  * @param min_length in python -> int
  * @return int*
  */
-int *ValidationMinLengthValue(PyObject *py_value, PyObject *min_length) {
+int *ValidationMinLengthValueNumber(PyObject *py_value, PyObject *min_length) {
     if (!PyObject_RichCompareBool(py_value, min_length, Py_GE))
         return (int *) 0;
+    return (int *) 1;
+}
+
+
+/**
+ * @brief
+ *
+ * @param max_length in python -> int
+ * @param min_length in python -> int
+ * @param py_value in python -> int
+ * @return int*
+ */
+int *_CheckMaxMinLength(PyObject *max_length, PyObject *min_length, PyObject *py_value) {
+    if (max_length != Py_None) {
+        if (!ValidationMaxLengthValueNumber(py_value, max_length))
+            return SetMaxLengthError();
+    }
+    if (min_length != Py_None) {
+        if (!ValidationMinLengthValueNumber(py_value, min_length))
+            return SetMinLengthError();
+    }
+
     return (int *) 1;
 }
 
@@ -82,14 +105,13 @@ int *CheckMaxMinLength(PyObject *rule, PyObject *py_value) {
     PyObject *min_length = PyDict_GetItemString(rule, MIN_LENGTH_FIELD_KEY);
 
     if (PyNumber_Check(py_value)) {
-        if (max_length != Py_None) {
-            if (!ValidationMaxLengthValue(py_value, max_length))
-                return SetMaxLengthError();
-        }
-        if (min_length != Py_None) {
-            if (!ValidationMinLengthValue(py_value, min_length))
-                return SetMinLengthError();
-        }
+        if (!_CheckMaxMinLength(max_length, min_length, py_value))
+            return (int *) 0;
+    }
+    if (PyUnicode_Check(py_value)) {
+        PyObject *length_py_value = PyLong_FromLong(PyObject_Length(py_value));
+        if (!_CheckMaxMinLength(max_length, min_length, length_py_value))
+            return (int *) 0;
     }
 
     return (int *) 1;
