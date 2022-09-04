@@ -7,6 +7,9 @@ int *ValidationMinLengthValueNumber(PyObject *py_value, PyObject *min_length);
 int *_CheckMaxMinLength(PyObject *max_length, PyObject *min_length, PyObject *py_value);
 int *CheckMaxMinLength(PyObject *rule, PyObject *py_value);
 
+int *_CheckOpidNumber(PyObject *opid_value, PyObject *py_value, int opid);
+int *CheckOpidNumber(PyObject *rule, PyObject *py_value);
+
 
 /**
  * @brief
@@ -112,6 +115,55 @@ int *CheckMaxMinLength(PyObject *rule, PyObject *py_value) {
         PyObject *length_py_value = PyLong_FromLong(PyObject_Length(py_value));
         if (!_CheckMaxMinLength(max_length, min_length, length_py_value))
             return (int *) 0;
+    }
+
+    return (int *) 1;
+}
+
+
+/**
+ * @brief
+ *
+ * @param rule in python -> Dict[str, Any]
+ * @param py_value in python -> int
+ * @param opid int
+ * @return int*
+ */
+int *_CheckOpidNumber(PyObject *opid_value, PyObject *py_value, int opid) {
+    if (!PyObject_RichCompareBool(py_value, opid_value, opid))
+        return (int *) 0;
+    return (int *) 1;
+}
+
+
+/**
+ * @brief
+ *
+ * @param rule in python -> Dict[str, Any]
+ * @param py_value in python -> int
+ * @return int*
+ */
+int *CheckOpidNumber(PyObject *rule, PyObject *py_value) {
+    PyObject *gt = PyDict_GetItemString(rule, GT_FIELD_KEY);
+    PyObject *ge = PyDict_GetItemString(rule, GE_FIELD_KEY);
+    PyObject *lt = PyDict_GetItemString(rule, LT_FIELD_KEY);
+    PyObject *le = PyDict_GetItemString(rule, LE_FIELD_KEY);
+
+    if (gt != Py_None) {
+        if (!_CheckOpidNumber(gt, py_value, Py_GT))
+            return SetGTError();
+    }
+    if (ge != Py_None) {
+        if (!_CheckOpidNumber(ge, py_value, Py_GE))
+            return SetGEError();
+    }
+    if (lt != Py_None) {
+        if (!_CheckOpidNumber(lt, py_value, Py_LT))
+            return SetLTError();
+    }
+    if (le != Py_None) {
+        if (!_CheckOpidNumber(le, py_value, Py_LE))
+            return SetLEError();
     }
 
     return (int *) 1;

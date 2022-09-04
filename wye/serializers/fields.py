@@ -1,6 +1,6 @@
 from typing import (
     Any, Dict, Optional,
-    Callable, List
+    Callable, List, Union
 )
 
 from wye.errors import (
@@ -16,6 +16,10 @@ IS_SERIALIZER = "IS_SERIALIZER"
 VALIDATORS = "VALIDATORS"
 MAX_LENGTH = "MAX_LENGTH"
 MIN_LENGTH = "MIN_LENGTH"
+GT = "GT"
+GE = "GE"
+LT = "LT"
+LE = "LE"
 
 
 class BaseField:
@@ -31,6 +35,10 @@ class BaseField:
         validators: List[Callable[[Any], Any]] = [],
         max_length: Optional[int] = None,
         min_length: Optional[int] = None,
+        gt: Union[None, int, float] = None,
+        ge: Union[None, int, float] = None,
+        lt: Union[None, int, float] = None,
+        le: Union[None, int, float] = None
     ) -> None:
         self._default = default
         self._alias = alias
@@ -38,6 +46,10 @@ class BaseField:
         self._validators = validators
         self._max_length = max_length
         self._min_length = min_length
+        self._gt = gt
+        self._ge = ge
+        self._lt = lt
+        self._le = le
 
         self._check_min_max_length()
         self._check_min_larger_max()
@@ -52,6 +64,10 @@ class BaseField:
             f"{VALIDATORS}": self._validators,
             f"{MAX_LENGTH}": self._max_length,
             f"{MIN_LENGTH}": self._min_length,
+            f"{GT}": self._gt,
+            f"{GE}": self._ge,
+            f"{LT}": self._lt,
+            f"{LE}": self._le
         }
         return rules
 
