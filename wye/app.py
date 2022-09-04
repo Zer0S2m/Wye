@@ -19,6 +19,7 @@ from wye.utils.control import (
 from wye.utils.parser import parser_config_ini
 from wye.errors import ErrorPrefix
 from wye.state import State
+from wye.websockets import WebSocket
 
 
 def request_response(
@@ -41,6 +42,18 @@ def request_response(
                 response = response_class(response)
 
             await response(receive, send)
+
+        return awaitable
+
+    return app
+
+
+def websocket_session(func):
+    def app(scope: Scope) -> ASGIInstance:
+        async def awaitable(receive: Receive, send: Send) -> None:
+            socket = WebSocket(scope, receive=receive, send=send)
+            kwargs = scope.get("kwargs", {})
+            await func(socket, **kwargs)
 
         return awaitable
 
@@ -108,6 +121,20 @@ class Wye:
                 route=func,
                 response_class=response_class
             )
+
+        return decorator
+
+    def add_websocket_route(
+        self,
+        path: str,
+        route: ASGIApp
+    ) -> None:
+        instance = Path(path, websocket_session(route), protocol="websocket")
+        self.router.routes.append(instance)
+
+    def websocket_route(self, path: str):
+        def decorator(func):
+            self.add_websocket_route(path, func)
 
         return decorator
 

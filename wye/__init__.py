@@ -11,6 +11,7 @@ from wye.datastructures import (
     URL, Headers, QueryParams
 )
 from wye.staticfiles import StaticFiles
+from wye.websockets import WebSocket
 
 
 __version__ = "0.1.0"
@@ -30,5 +31,6 @@ __all__ = [
     "Headers",
     "QueryParams",
     "FileResponse",
-    "StaticFiles"
+    "StaticFiles",
+    "WebSocket"
 ]

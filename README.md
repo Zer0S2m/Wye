@@ -120,6 +120,42 @@ class App:
         await response(receive, send)
 ```
 
+### WebSocket
+
+WebSocket, который выполняет ту же роль, что и HTTP-запрос, но позволяет отправлять и
+получать данные в сеансе веб-сокета.
+
+```python
+from starlette import WebSocket
+
+
+class App:
+    def __init__(self, scope):
+        self.scope = scope
+
+    async def __call__(self, receive, send):
+        session = WebSocket(self.scope, receive=receive, send=send)
+        await session.accept()
+        await session.send_text('Hello, socket!')
+        await session.close()
+```
+
+#### Принятие соединения
+`await session.accept(subprotocol=None)`
+
+#### Отправка данных
+`await session.send_text(data)`
+`await session.send_bytes(data)`
+`await session.send_json(data)`
+
+#### Получение данных
+`await session.receive_text()`
+`await session.receive_bytes()`
+`await session.receive_json()`
+
+#### Закрытие соединения
+`await session.close(code=1000)`
+
 ## Routing
 
 ### Router
@@ -200,7 +236,12 @@ async def about(request):
     - `path: str` - путь
     - `response_class: Type[Response]` - класс ответа
 
-3) `.mount(path)` - Монтировать приложение `Wye`
+3) `add_websocket_route(path, route)` - Добавить маршрут сеанса веб-сокета. Функция должна быть
+сопрограмой. Сигнатура: `func(session, **kwargs)`
+
+4) `.websocket_route(path)` - Добавить маршрут WebSocket, формат декоратора.
+
+5) `.mount(path)` - Монтировать приложение `Wye`
 
 #### Args
 
