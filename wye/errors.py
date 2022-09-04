@@ -1,4 +1,4 @@
-class ErrorPrefix(Exception):
+class BaseError(Exception):
     def __init__(
         self,
         *args: object
@@ -9,16 +9,25 @@ class ErrorPrefix(Exception):
         return self.message
 
 
-class ErrorSetParamState(Exception):
-    def __init__(
-        self,
-        *args: object
-    ) -> None:
-        self.message = args[0]
+class ErrorPrefix(BaseError):
+    """Not prefix in route"""
 
-    def __str__(self) -> str:
-        return self.message
+
+class ErrorSetParamState(BaseError):
+    """Already exists key in state"""
 
 
 class ErrorDisconnect(Exception):
-    pass
+    """Disconnect"""
+
+
+class ErrorMaxLengthType(BaseError):
+    """Invalid type parametr max_length"""
+
+
+class ErrorMinLengthType(BaseError):
+    """Invalid type parametr min_length"""
+
+
+class ErrorMinLengthLargerMaxLength(BaseError):
+    """min_length > max_length"""

@@ -1,15 +1,14 @@
 from typing import (
-    Any, Dict, Type,
-    Union, List
+    Type, Union, List
 )
 
-from wye.serializers import BaseSerializer
-
+from wye.serializers import Serializer
+from wye.types import JSON
 import wye_serializers
 
 
 def build_json(
-    json: Union[Dict[str, Any], List[Dict[str, Any]]],
-    rules: Type[BaseSerializer]
-) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+    json: Union[JSON, List[JSON]],
+    rules: Type[Serializer]
+) -> Union[JSON, List[JSON]]:
     return wye_serializers.build_json(json, rules())
