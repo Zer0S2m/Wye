@@ -28,21 +28,18 @@ class Request:
     def url(self) -> URL:
         if not hasattr(self, "_url"):
             self._url = URL(create_url(self._scope))
-
         return self._url
 
     @property
     def query_params(self) -> QueryParams:
         if not hasattr(self, "_query_params"):
             self._query_params = QueryParams(self._scope["query_string"])
-
         return self._query_params
 
     @property
     def headers(self) -> Headers:
         if not hasattr(self, "_headers"):
             self._headers = Headers(self._scope["headers"])
-
         return self._headers
 
     async def stream(self):
