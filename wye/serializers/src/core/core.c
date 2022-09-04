@@ -102,6 +102,9 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
     if (!CheckMaxMinLength(build_field_check.rule, new_value))
         return (int *) 0;
 
+    if (!CheckOpidNumber(build_field_check.rule, new_value))
+        return (int *) 0;
+
     PyObject *alias = PyDict_GetItemString(build_field_check.rule, ALIAS_FIELD_KEY);
     PyDict_SetItem(build.ready_json, alias, new_value);
 

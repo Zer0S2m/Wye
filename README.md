@@ -414,7 +414,6 @@ from wye.serializers import fields
 - `alias: str` - публичное имя поля, по умолчанию `None`
 - `required: bool` - обязательный ли параметр
 - `validators: Callable[[Any], Any]` - валидаторы, принимают один параметр, пример:
-
     ```python
     from wye.serializers import Serializer
     from wye.serializers import fields
@@ -425,6 +424,12 @@ from wye.serializers import fields
     class Serializer2(Serializer):
         param_1: int = fields.INT(validators=[validator])
     ```
+- `max_length: int` - для строковых значений это добавляет соответствующую проверку
+- `min_length: int` - для строковых значений это добавляет соответствующую проверку
+- `gt: Union[int, float]` - для числовых значений *(int, float)* добавляет проверку `больше чем`
+- `ge: Union[int, float]` - для числовых значений это добавляет проверку `больше или равно`
+- `lt: Union[int, float]` - для числовых значений это добавляет проверку `меньше чем`
+- `le: Union[int, float]` - для числовых значений это добавляет проверку `меньше или равно`
 
 1) Типы:
     - `fields.BOOL` - Булевое значение

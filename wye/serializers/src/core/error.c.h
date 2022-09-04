@@ -4,6 +4,10 @@ int *SetAttributeError();
 int *SetValidationDefaultError();
 int *SetMaxLengthError();
 int *SetMinLengthError();
+int *SetGTError();
+int *SetGEError();
+int *SetLTError();
+int *SetLEError();
 
 
 /**
@@ -45,7 +49,7 @@ int *SetValidationDefaultError() {
  * @return int*
  */
 int *SetMaxLengthError() {
-    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Value is greater than allowed");
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is greater than allowed");
     return (int *) 0;
 };
 
@@ -56,6 +60,50 @@ int *SetMaxLengthError() {
  * @return int*
  */
 int *SetMinLengthError() {
-    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Value is less than allowed");
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is less than allowed");
     return (int *) 0;
 };
+
+
+/**
+ * @brief
+ *
+ * @return int*
+ */
+int *SetGTError() {
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is less than allowed");
+    return (int *) 0;
+}
+
+
+/**
+ * @brief
+ *
+ * @return int*
+ */
+int *SetGEError() {
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is greater than allowed");
+    return (int *) 0;
+}
+
+
+/**
+ * @brief
+ *
+ * @return int*
+ */
+int *SetLTError() {
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is greater than allowed");
+    return (int *) 0;
+}
+
+
+/**
+ * @brief
+ *
+ * @return int*
+ */
+int *SetLEError() {
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is less than allowed");
+    return (int *) 0;
+}
