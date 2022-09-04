@@ -418,12 +418,11 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
 
             PyObject *validators = PyDict_GetItemString(rules, VALIDATORS_FIELD_KEY);
             if (PySequence_Length(validators) > 0) {
-                PyObject *type_serializer = GET_TYPE(rules_params);
                 PyObject *path_to_serializer_dict = SplitKeysTreeRunValidatorDict(key_tree);
-                if (!PyDict_GetItem(history_build->run_validators, path_to_serializer_dict))
-                    PyDict_SetItem(history_build->run_validators, path_to_serializer_dict, Py_True);
-                else
+                if (!PyDict_GetItem(history_build->run_validators, path_to_serializer_dict)) {
                     part_raw_json = RunValidators(part_raw_json, validators);
+                    PyDict_SetItem(history_build->run_validators, path_to_serializer_dict, Py_True);
+                };
             }
 
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
@@ -461,6 +460,7 @@ PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct Histo
 
         PyList_Append(list_ready_json, PyDict_Copy(build.ready_json));
         PyDict_Clear(build.ready_json);
+        PyDict_Clear(history_build->run_validators);
     }
 
     return list_ready_json;
