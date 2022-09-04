@@ -99,6 +99,9 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
     PyObject *validators = PyDict_GetItemString(build_field_check.rule, VALIDATORS_FIELD_KEY);
     PyObject *new_value = RunValidators(build_field_check.raw_json_obj, validators);
 
+    if (!CheckMaxMinLength(build_field_check.rule, new_value))
+        return (int *) 0;
+
     PyObject *alias = PyDict_GetItemString(build_field_check.rule, ALIAS_FIELD_KEY);
     PyDict_SetItem(build.ready_json, alias, new_value);
 
@@ -460,7 +463,7 @@ PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct Histo
 
         PyList_Append(list_ready_json, PyDict_Copy(build.ready_json));
         PyDict_Clear(build.ready_json);
-        PyDict_Clear(history_build->run_validators);
+        history_build->run_validators = PyDict_New();
     }
 
     return list_ready_json;

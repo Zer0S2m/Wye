@@ -2,6 +2,8 @@
 int *SetValidationError();
 int *SetAttributeError();
 int *SetValidationDefaultError();
+int *SetMaxLengthError();
+int *SetMinLengthError();
 
 
 /**
@@ -35,3 +37,25 @@ int *SetValidationDefaultError() {
     PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Validation error: default value");
     return (int *) 0;
 }
+
+
+/**
+ * @brief Set the Max Length Error object
+ *
+ * @return int*
+ */
+int *SetMaxLengthError() {
+    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Value is greater than allowed");
+    return (int *) 0;
+};
+
+
+/**
+ * @brief Set the Min Length Error object
+ *
+ * @return int*
+ */
+int *SetMinLengthError() {
+    PyErr_SetString(PyExc_AttributeError, "<WyeSerializers>: Value is less than allowed");
+    return (int *) 0;
+};

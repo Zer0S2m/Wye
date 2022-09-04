@@ -24,7 +24,7 @@ class State:
     ) -> None:
         if key in self._dict:
             raise ErrorSetParamState(
-                f"the key: {key} -already exists,"
+                f"the key: {key} - already exists,"
                 " call the 'update' method to update this setting"
             )
 

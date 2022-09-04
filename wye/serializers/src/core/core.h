@@ -44,6 +44,8 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args);
 #define REQUIRED_FIELD_KEY "REQUIRED"
 #define VALIDATORS_FIELD_KEY "VALIDATORS"
 #define IS_SERIALIZER_FIELD_KEY "IS_SERIALIZER"
+#define MAX_LENGTH_FIELD_KEY "MAX_LENGTH"
+#define MIN_LENGTH_FIELD_KEY "MIN_LENGTH"
 
 #define SINGLE_LEVEL_JSON 2
 
