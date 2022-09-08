@@ -4,6 +4,9 @@ from typing import (
 )
 
 from wye.serializers.fields import ALIAS
+from wye.errors import (
+    ErrorValidationJson, ErrorNotField
+)
 from wye.types import JSON
 import wye_serializers
 
@@ -56,8 +59,14 @@ class Serializer(metaclass=MetaSerializer):
     __build_serializers__ = {}
     __fields__ = {}
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        is_validate: bool = False,
+        **kwargs: JSON
+    ) -> None:
+        self._is_validate = is_validate
         self._rules = self._build_rules()
+        self._set_values(kwargs)
 
     def is_validate(
         self,
@@ -65,6 +74,18 @@ class Serializer(metaclass=MetaSerializer):
     ) -> Tuple[bool, Union[JSON, List[JSON]]]:
         obj = wye_serializers.is_validate(json, self._rules)
         return obj
+
+    @property
+    def collected_json(self):
+        if not hasattr(self, "_collected_json"):
+            self._collected_json = wye_serializers.build_json(
+                self._raw_json, self._rules
+            )
+        return self._collected_json
+
+    @property
+    def raw_json(self):
+        return self._raw_json
 
     def _build_rules(self) -> JSON:
         for serializer_name, fields in self.__serializers__.items():
@@ -87,6 +108,18 @@ class Serializer(metaclass=MetaSerializer):
 
         final_serializer = self.__class__.__name__
         return self.__serializers__.get(final_serializer)
+
+    def _set_values(self, values: JSON):
+        is_validate, _ = self.is_validate(values)
+        if not is_validate and self._is_validate:
+            raise ErrorValidationJson("Validation error")
+
+        for param, value in values.items():
+            if param not in self.__fields__:
+                raise ErrorNotField(f"{param} - not field in scheme")
+            setattr(self, param, value)
+
+        self._raw_json = values
 
     def __call__(self) -> JSON:
         return self._rules
