@@ -31,3 +31,11 @@ class ErrorMinLengthType(BaseError):
 
 class ErrorMinLengthLargerMaxLength(BaseError):
     """min_length > max_length"""
+
+
+class ErrorValidationJson(BaseError):
+    """When methos is_validate return False"""
+
+
+class ErrorNotField(BaseError):
+    """Ton field"""

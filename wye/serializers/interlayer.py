@@ -9,6 +9,13 @@ import wye_serializers
 
 def build_json(
     json: Union[JSON, List[JSON]],
-    rules: Type[Serializer]
+    serializer: Type[Serializer]
 ) -> Union[JSON, List[JSON]]:
-    return wye_serializers.build_json(json, rules())
+    return wye_serializers.build_json(json, serializer())
+
+
+def build_json_from_object(
+    objects: Union[Type, List[Type]],
+    serializer: Type[Serializer]
+) -> Union[JSON, List[JSON]]:
+    return wye_serializers.build_json_from_object(objects, serializer())

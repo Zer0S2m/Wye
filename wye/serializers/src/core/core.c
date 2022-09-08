@@ -3,6 +3,7 @@
 #include "logs.c.h"
 #include "error.c.h"
 #include "validators.c.h"
+#include "object_build.c.h"
 
 
 struct Build {
@@ -533,6 +534,17 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args) {
 }
 
 
+static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
+    PyObject *raw_objects;
+    struct Build build;
+
+    if (!PyArg_ParseTuple(args, "OO", &raw_objects, &build.rules))
+        return NULL;
+
+    return Py_None;
+}
+
+
 static PyMethodDef WyeSerializersMethods[] = {
     {
         "build_json",
@@ -545,6 +557,12 @@ static PyMethodDef WyeSerializersMethods[] = {
         method_is_validate,
         METH_VARARGS,
         "Checks if json is valid"
+    },
+    {
+        "build_json_from_object",
+        method_build_json_from_object,
+        METH_VARARGS,
+        "Collects json from objects according to the rules"
     },
     { NULL, NULL, 0, NULL }
 };
