@@ -16,7 +16,7 @@ struct HistoryBuild;
 int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_check);
 int *CheckField(struct BuildFieldCheck build_field_check);
 int *SetField(struct Build build, struct BuildFieldCheck build_field_check);
-int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, int level);
+int IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, Py_ssize_t level);
 PyObject *GetParamFromLevelKeys(PyObject *keys_level);
 PyObject *GetPartRule(PyObject *rules, PyObject *key_tree);
 PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree);
@@ -24,10 +24,12 @@ void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree);
 void FindAllKeysRawJson(PyObject *rules, struct KeysTreeList *keys_tree_list, PyObject *path, PyObject *alias_path);
 int *BuildSingleField(struct Build build, PyObject *key_tree_element);
 void ClearReadyJsonFromEmptyDict(PyObject *ready_json);
+void SetDefaultValueInRawJson(PyObject *raw_json, PyObject *key_tree, PyObject *value);
 int *BuildJson(struct Build build, struct HistoryBuild *history_build);
 PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build);
 static PyObject *method_build_json(PyObject *self, PyObject *args);
 static PyObject *method_is_validate(PyObject *self, PyObject *args);
+static PyObject *method_build_json_from_object(PyObject *self, PyObject *args);
 
 
 #define RESET_COLOR "\033[0m"
@@ -51,7 +53,8 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args);
 #define LT_FIELD_KEY "LT"
 #define LE_FIELD_KEY "LE"
 
-#define SINGLE_LEVEL_JSON 2
+#define LAST_KEY_TREE (Py_ssize_t) 1
+#define SINGLE_LEVEL_JSON (Py_ssize_t) 2
 
 #define GET_RULES(rules) PySequence_GetItem(rules, 0)
 #define GET_TYPE(rules) PySequence_GetItem(rules, 1)

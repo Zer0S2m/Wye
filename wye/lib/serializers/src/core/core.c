@@ -124,22 +124,22 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
  * @param level_key in python -> int
  * @return int*
  */
-int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, int level) {
+int IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, Py_ssize_t level) {
     if (PyList_Size(keys_tree) <= level_key_tree + 1)
-        return (int *) 0;
+        return 0;
 
     PyObject *next_key_tree = PyList_GET_ITEM(keys_tree, level_key_tree + 1);
     PyObject *current_key_tree = PyList_GetItem(keys_tree, level_key_tree);
 
     if (PyList_Size(current_key_tree) > PyList_Size(next_key_tree))
-        return (int *) 0;
+        return 0;
 
     PyObject *first_key_tree = PyList_GetItem(next_key_tree, level);
 
     if (key == first_key_tree)
-        return (int *) 1;
+        return 1;
 
-    return (int *) 0;
+    return 0;
 }
 
 
@@ -351,8 +351,8 @@ void ClearReadyJsonFromEmptyDict(PyObject *ready_json) {
 void SetDefaultValueInRawJson(PyObject *raw_json, PyObject *key_tree, PyObject *value) {
     PyObject *part_raw_json = raw_json;
 
-    int length_key_tree = PyList_Size(key_tree);
-    for (int i_key_tree = 0; i_key_tree < length_key_tree - SINGLE_LEVEL_JSON; i_key_tree++) {
+    Py_ssize_t length_key_tree = PyList_Size(key_tree);
+    for (Py_ssize_t i_key_tree = 0; i_key_tree < length_key_tree - SINGLE_LEVEL_JSON; i_key_tree++) {
         PyObject *param = PyList_GetItem(key_tree, i_key_tree);
 
         if (!PyDict_GetItem(part_raw_json, param))
@@ -384,7 +384,9 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
         FindAllKeysRawJson(build.rules, &keys_tree_list, PyList_New(0), PyList_New(0));
         history_build->keys_tree = keys_tree;
         history_build->keys_tree_alias = keys_tree_alias;
-        history_build->is_any_nesting_in_key = (int *) malloc(sizeof(int) * PyList_Size(keys_tree) - 1);
+        history_build->is_any_nesting_in_key = (int *) malloc(
+            sizeof(int) * PyList_Size(keys_tree) - (Py_ssize_t) 1
+        );
     } else {
         keys_tree = history_build->keys_tree;
         keys_tree_alias = history_build->keys_tree_alias;
@@ -394,17 +396,22 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
 
     for (int i_key_tree = 0; i_key_tree < PyList_Size(keys_tree); i_key_tree++) {
         PyObject *key_tree = PyList_GetItem(keys_tree, i_key_tree);
-        int length_key_tree = PyList_Size(key_tree);
+        Py_ssize_t length_key_tree = PyList_Size(key_tree);
         PyObject *key_tree_element = PyList_GetItem(key_tree, length_key_tree - 1);
 
-        int *is_any_nesting_in_key;
+        int is_any_nesting_in_key;
 
         if (length_key_tree == 1) {
             PyList_Append(history_build->keys_tree_param_title, key_tree_element);
             PyList_Append(history_build->part_rule, PyLong_FromLong(0));
 
             if (!build.is_history) {
-                is_any_nesting_in_key = IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1);
+                is_any_nesting_in_key = IsThereAnyNestingInKey(
+                    key_tree_element,
+                    keys_tree,
+                    i_key_tree,
+                    length_key_tree - LAST_KEY_TREE
+                );
                 history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
                 if (is_any_nesting_in_key)
                     continue;
@@ -428,7 +435,12 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
             }
 
             if (!build.is_history) {
-                is_any_nesting_in_key = IsThereAnyNestingInKey(key_tree_element, keys_tree, i_key_tree, length_key_tree - 1);
+                is_any_nesting_in_key = IsThereAnyNestingInKey(
+                    key_tree_element,
+                    keys_tree,
+                    i_key_tree,
+                    length_key_tree - LAST_KEY_TREE
+                );
                 history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
                 if (is_any_nesting_in_key)
                     continue;
@@ -611,6 +623,8 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
         if (!BuildJson(build, &history_build))
             return NULL;
     }
+
+    free(history_build.is_any_nesting_in_key);
 
     return build.ready_json;
 }
