@@ -1,4 +1,5 @@
-// Run validators
+/* Run validators */
+
 PyObject *RunValidators(PyObject *value, PyObject *validators);
 PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree);
 
@@ -112,7 +113,7 @@ int *CheckMaxMinLength(PyObject *rule, PyObject *py_value) {
             return (int *) 0;
     }
     if (PyUnicode_Check(py_value)) {
-        PyObject *length_py_value = PyLong_FromLong(PyObject_Length(py_value));
+        PyObject *length_py_value = PyLong_FromLong((long) PyObject_Length(py_value));
         if (!_CheckMaxMinLength(max_length, min_length, length_py_value))
             return (int *) 0;
     }
