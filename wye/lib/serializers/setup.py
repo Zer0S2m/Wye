@@ -11,8 +11,8 @@ def main():
         ext_modules=[
             Extension(
                 "wye_serializers",
-                ["./wye/serializers/src/core/core.c"],
-                include_dirs=['./wye/serializers/src/']
+                ["./wye/lib/serializers/src/core/core.c"],
+                include_dirs=['./wye/lib/serializers/src/']
             )
         ]
     )
