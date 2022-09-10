@@ -110,15 +110,18 @@ class Serializer(metaclass=MetaSerializer):
         return self.__serializers__.get(final_serializer)
 
     def _set_values(self, values: JSON):
-        is_validate, _ = self.is_validate(values)
-        if not is_validate and self._is_validate:
-            raise ErrorValidationJson("Validation error")
+        if self._is_validate:
+            is_validate, collected_json = self.is_validate(values)
+            if not is_validate and self._is_validate:
+                raise ErrorValidationJson("Validation error")
 
         for param, value in values.items():
             if param not in self.__fields__:
                 raise ErrorNotField(f"{param} - not field in scheme")
             setattr(self, param, value)
 
+        if self._is_validate:
+            self._collected_json = collected_json
         self._raw_json = values
 
     def __call__(self) -> JSON:
