@@ -13,6 +13,7 @@ struct BuildFieldCheck;
 struct HistoryBuild;
 
 // Build json
+PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_field_check);
 int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_check);
 int *CheckField(struct BuildFieldCheck build_field_check);
 int *SetField(struct Build build, struct BuildFieldCheck build_field_check);

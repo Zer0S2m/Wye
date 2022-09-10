@@ -36,6 +36,26 @@ struct HistoryBuild {
 
 
 /**
+ * @brief
+ *
+ * @param validators in python -> List[Callable]
+ * @param build_field_check
+ * @return PyObject*
+ */
+PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_field_check) {
+    PyObject *new_value = RunValidators(build_field_check.raw_json_obj, validators);
+
+    if (!CheckMaxMinLength(build_field_check.rule, new_value))
+        return NULL;
+
+    if (!CheckOpidNumber(build_field_check.rule, new_value))
+        return NULL;
+
+    return new_value;
+}
+
+
+/**
  * @brief Set the Default Value object
  *
  * @param build
@@ -46,14 +66,20 @@ int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_chec
     PyObject *default_value = PyDict_GetItemString(build_field_check.rule, DEFAULT_FIELD_KEY);
     PyObject *type_field = PyDict_GetItemString(build_field_check.rule, TYPE_FIELD_KEY);
 
-    if (!PyObject_IsInstance(default_value, type_field) && default_value != Py_None)
+    if (default_value != Py_None && !PyObject_IsInstance(default_value, type_field))
         return SetValidationDefaultError();
 
     if (default_value == Py_None)
         return (int *) 1;
 
+    build_field_check.raw_json_obj = default_value;
+    PyObject *validators = PyDict_GetItemString(build_field_check.rule, VALIDATORS_FIELD_KEY);
+    PyObject *new_value = ValidationField(validators, build_field_check);
+    if (!new_value)
+        return NULL;
+
     PyObject *alias = PyDict_GetItemString(build_field_check.rule, ALIAS_FIELD_KEY);
-    PyDict_SetItem(build.ready_json, alias, default_value);
+    PyDict_SetItem(build.ready_json, alias, new_value);
 
     return (int *) 1;
 }
@@ -101,13 +127,9 @@ int *SetField(struct Build build, struct BuildFieldCheck build_field_check) {
     }
 
     PyObject *validators = PyDict_GetItemString(build_field_check.rule, VALIDATORS_FIELD_KEY);
-    PyObject *new_value = RunValidators(build_field_check.raw_json_obj, validators);
-
-    if (!CheckMaxMinLength(build_field_check.rule, new_value))
-        return (int *) 0;
-
-    if (!CheckOpidNumber(build_field_check.rule, new_value))
-        return (int *) 0;
+    PyObject *new_value = ValidationField(validators, build_field_check);
+    if (!new_value)
+        return NULL;
 
     PyObject *alias = PyDict_GetItemString(build_field_check.rule, ALIAS_FIELD_KEY);
     PyDict_SetItem(build.ready_json, alias, new_value);
