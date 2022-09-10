@@ -403,6 +403,7 @@ from wye import QueryParams
 ## Serializers
 
 `src` - `wye/serializers`
+`lib` - `wye/lib/serializers`
 
 ### Schemas
 
@@ -440,9 +441,14 @@ class Serializer3(Serializer2):
 ```python
 from wye.serializers import build_json
 ```
+- `build_json(json: Union[Dict[str, Any], List[Dict[str, Any]]], serializer: Type[Serializer])` -
+Собирает `json` по правилам из объектов `dict`. Возвращает `Union[Dict[str, Any], List[Dict[str, Any]]]`
 
-- `build_json(json: Union[Dict[str, Any], List[Dict[str, Any]]], rules: Type[BaseSerializer])` -
-Собирает `json` по правилам. Возвращает `Union[Dict[str, Any], List[Dict[str, Any]]]`
+```python
+from wye.serializers import build_json_from_object
+```
+- `build_json_from_object(objects: Union[Type, List[Type]], serializer: Type[Serializer])` -
+Собирает `json` по правилам из объектов. Возвращает `Union[Dict[str, Any], List[Dict[str, Any]]]`
 
 ### Fields
 
