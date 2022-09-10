@@ -17,8 +17,10 @@ PyObject *GetFieldByPath(PyObject *object, PyObject *key_tree) {
 
     for (int i_key_tree = 0; i_key_tree < PyList_Size(key_tree); i_key_tree++) {
         PyObject *param = PyList_GetItem(key_tree, i_key_tree);
+
         if (!part)
             return NULL;
+
         part = PyObject_GetAttr(part, param);
     }
 
@@ -69,4 +71,6 @@ void ConvertObjectToJson(PyObject *json, PyObject *object, PyObject *keys_tree) 
 
         BuildOneFieldInJson(json, key_tree, part_json_object);
     }
+
+    PyErr_Clear();
 }
