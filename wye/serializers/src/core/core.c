@@ -481,14 +481,15 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
  * @brief
  *
  * @param build
- * @param raw_json in python -> dict
+ * @param raw_json in python -> List[Dict[str, Any]]
  * @param history_build
  * @return PyObject*
  */
 PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build) {
-    PyObject *list_ready_json = PyList_New(0);
+    Py_ssize_t length_raw_json = PyList_Size(raw_json);
+    PyObject *list_ready_json = PyList_New(length_raw_json);
 
-    for (int i_raw_json_obj = 0; i_raw_json_obj < PyList_Size(raw_json); i_raw_json_obj++) {
+    for (int i_raw_json_obj = 0; i_raw_json_obj < length_raw_json; i_raw_json_obj++) {
         PyObject *raw_json_obj = PyList_GetItem(raw_json, i_raw_json_obj);
         build.raw_json = raw_json_obj;
 
@@ -497,9 +498,9 @@ PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct Histo
 
         build.is_history = 1;
 
-        PyList_Append(list_ready_json, PyDict_Copy(build.ready_json));
+        PyList_SetItem(list_ready_json, i_raw_json_obj, PyDict_Copy(build.ready_json));
         PyDict_Clear(build.ready_json);
-        history_build->run_validators = PyDict_New();
+        PyDict_Clear(history_build->run_validators);
     }
 
     return list_ready_json;
@@ -539,7 +540,6 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
         build.ready_json = list_ready_json;
     } else {
         build.raw_json = raw_json;
-
         if (!BuildJson(build, &history_build))
             return NULL;
     }
@@ -588,11 +588,29 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
     struct KeysTreeList keys_tree_list = { PyList_New(0), PyList_New(0) };
     FindAllKeysRawJson(build.rules, &keys_tree_list, PyList_New(0), PyList_New(0));
 
-    PyObject *raw_json = ConvertObjectToJson(raw_object, build.rules, keys_tree_list.keys_tree);
-    build.raw_json = raw_json;
+    if (PyList_Check(raw_object)) {
+        Py_ssize_t length_raw_objects = PyList_Size(raw_object);
+        PyObject *raw_json_list = PyList_New(length_raw_objects);
 
-    if (!BuildJson(build, &history_build))
-        return NULL;
+        for (int i_raw_object = 0; i_raw_object < length_raw_objects; i_raw_object++) {
+            PyObject *raw_object_ = PyList_GetItem(raw_object, i_raw_object);
+            PyObject *raw_json = PyDict_New();
+            ConvertObjectToJson(raw_json, raw_object_, keys_tree_list.keys_tree);
+            PyList_SetItem(raw_json_list, i_raw_object, raw_json);
+        }
+
+        PyObject *list_ready_json = BuildJsonFromList(build, raw_json_list, &history_build);
+        if (!list_ready_json)
+            return NULL;
+
+        build.ready_json = list_ready_json;
+    } else {
+        PyObject *raw_json = PyDict_New();
+        ConvertObjectToJson(raw_json, raw_object, keys_tree_list.keys_tree);
+        build.raw_json = raw_json;
+        if (!BuildJson(build, &history_build))
+            return NULL;
+    }
 
     return build.ready_json;
 }

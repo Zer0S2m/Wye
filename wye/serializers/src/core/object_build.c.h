@@ -2,7 +2,7 @@
 
 PyObject *GetFieldByPath(PyObject *object, PyObject *key_tree);
 void BuildOneFieldInJson(PyObject *json, PyObject *key_tree, PyObject *value);
-PyObject *ConvertObjectToJson(PyObject *object, PyObject *rules, PyObject *keys_tree);
+void ConvertObjectToJson(PyObject *json, PyObject *object, PyObject *keys_tree);
 
 
 /**
@@ -55,14 +55,11 @@ void BuildOneFieldInJson(PyObject *json, PyObject *key_tree, PyObject *value) {
 /**
  * @brief
  *
+ * @param json in python -> Dict
  * @param object in python -> object
- * @param rules in python -> Dict[str, Any]
  * @param keys_tree in python List[List[str]]
- * @return PyObject*
  */
-PyObject *ConvertObjectToJson(PyObject *object, PyObject *rules, PyObject *keys_tree) {
-    PyObject *build_json = PyDict_New();
-
+void ConvertObjectToJson(PyObject *json, PyObject *object, PyObject *keys_tree) {
     for (int i_key_tree = 0; i_key_tree < PyList_Size(keys_tree); i_key_tree++) {
         PyObject *key_tree = PyList_GetItem(keys_tree, i_key_tree);
         PyObject *part_json_object = GetFieldByPath(object, key_tree);
@@ -70,8 +67,6 @@ PyObject *ConvertObjectToJson(PyObject *object, PyObject *rules, PyObject *keys_
         if (!part_json_object)
             continue;
 
-        BuildOneFieldInJson(build_json, key_tree, part_json_object);
+        BuildOneFieldInJson(json, key_tree, part_json_object);
     }
-
-    return build_json;
 }
