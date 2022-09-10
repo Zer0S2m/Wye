@@ -67,8 +67,11 @@ int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_chec
 */
 int *CheckField(struct BuildFieldCheck build_field_check) {
     PyObject *is_required = PyDict_GetItemString(build_field_check.rule, REQUIRED_FIELD_KEY);
-    if (!build_field_check.raw_json_obj && PyObject_IsTrue(is_required))
-        return SetAttributeError();
+    if (!build_field_check.raw_json_obj && PyObject_IsTrue(is_required)) {
+        PyObject *default_value = PyDict_GetItemString(build_field_check.rule, DEFAULT_FIELD_KEY);
+        if (default_value == Py_None)
+            return SetAttributeError();
+    }
 
     // If the "required" parameter is False
     if (!build_field_check.raw_json_obj)
@@ -143,7 +146,7 @@ int *IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tr
 /**
  * @brief Get the Level Key Param object
  *
- * @param keys_level in python -> list; example - ["param_1", "param_2"]
+ * @param keys_level in python -> List[str]; example - ["param_1", "param_2"]
  * @return PyObject*
 */
 PyObject *GetParamFromLevelKeys(PyObject *keys_level) {
@@ -155,8 +158,8 @@ PyObject *GetParamFromLevelKeys(PyObject *keys_level) {
 /**
  * @brief Get the Part Raw Json object
  *
- * @param raw_json
- * @param key_tree
+ * @param raw_json in python -> Dict[str, Any]
+ * @param key_tree in python -> List[str]
  * @return PyObject*
 */
 PyObject *GetPartRawJson(PyObject *raw_json, PyObject *key_tree) {
@@ -167,8 +170,8 @@ PyObject *GetPartRawJson(PyObject *raw_json, PyObject *key_tree) {
 /**
  * @brief Get the Part Rule object
  *
- * @param rule
- * @param key_tree
+ * @param rule in python -> Dict[str, Any]
+ * @param key_tree in python -> List[str]
  * @return PyObject*
 */
 PyObject *GetPartRule(PyObject *rule, PyObject *key_tree) {
@@ -179,8 +182,8 @@ PyObject *GetPartRule(PyObject *rule, PyObject *key_tree) {
 /**
  * @brief Get the Part Ready Json object
  *
- * @param ready_json in python -> dict
- * @param key_tree in python -> list; example ["param_1", "param_2"]
+ * @param ready_json in python -> Dict[str, Any]
+ * @param key_tree in python -> List[str]; example ["param_1", "param_2"]
  * @return PyObject* - in python -> dict
 */
 PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree) {
@@ -202,8 +205,8 @@ PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree) {
 /**
  * @brief
  *
- * @param ready_json in python -> dict
- * @param keys_tree in python -> list; example [["param_1"], ["param_1", "param_2"]] ->
+ * @param ready_json in python -> Dict[str, Any]
+ * @param keys_tree in python -> List[List[str]]; example [["param_1"], ["param_1", "param_2"]] ->
  * {"param_1": {"param_2": ...}}
 */
 void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree) {
@@ -238,9 +241,10 @@ void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree) {
 /**
  * @brief
  *
- * @param rules in python -> dict
- * @param result in python -> list
- * @param path in python -> list
+ * @param rules in python -> Dict[str, Any]
+ * @param result in python -> List[List[str]]
+ * @param path in python -> List[str]
+ * @param alias_path in python -> List[str]
 */
 void FindAllKeysRawJson(
     PyObject *rules,
@@ -338,6 +342,34 @@ void ClearReadyJsonFromEmptyDict(PyObject *ready_json) {
 
 
 /**
+ * @brief Set the Default Value In Raw Json object
+ *
+ * @param raw_json in python -> Dict[str, ANy]
+ * @param key_tree in python -> List[str]
+ * @param value in python -> Any
+ */
+void SetDefaultValueInRawJson(PyObject *raw_json, PyObject *key_tree, PyObject *value) {
+    PyObject *part_raw_json = raw_json;
+
+    int length_key_tree = PyList_Size(key_tree);
+    for (int i_key_tree = 0; i_key_tree < length_key_tree - SINGLE_LEVEL_JSON; i_key_tree++) {
+        PyObject *param = PyList_GetItem(key_tree, i_key_tree);
+
+        if (!PyDict_GetItem(part_raw_json, param))
+            PyDict_SetItem(part_raw_json, param, PyDict_New());
+
+        part_raw_json = PyDict_GetItem(part_raw_json, param);
+    }
+
+    PyDict_SetItem(
+        part_raw_json,
+        PyList_GetItem(key_tree, length_key_tree - SINGLE_LEVEL_JSON),
+        value
+    );
+}
+
+
+/**
  * @brief
  *
  * @param build
@@ -410,14 +442,15 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
             PyObject *rules = GET_RULES(rules_params);
 
             PyObject *part_raw_json = GetPartRawJson(build.raw_json, key_tree);
-
             if (!part_raw_json) {
                 PyObject *default_value = PyDict_GetItemString(rules, DEFAULT_FIELD_KEY);
                 if (default_value == Py_None && !PyDict_Check(default_value) &&
                     PyObject_IsTrue(PyDict_GetItemString(rules, REQUIRED_FIELD_KEY)))
                         return SetAttributeError();
-                else if (default_value != Py_None && PyDict_Check(default_value))
-                    part_raw_json = default_value;
+                else if (default_value != Py_None && PyDict_Check(default_value)) {
+                    SetDefaultValueInRawJson(build.raw_json, key_tree, default_value);
+                    part_raw_json = GetPartRawJson(build.raw_json, key_tree);
+                }
                 else
                     continue;
             }
@@ -535,13 +568,33 @@ static PyObject *method_is_validate(PyObject *self, PyObject *args) {
 
 
 static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
-    PyObject *raw_objects;
+    PyObject *raw_object;
     struct Build build;
 
-    if (!PyArg_ParseTuple(args, "OO", &raw_objects, &build.rules))
+    if (!PyArg_ParseTuple(args, "OO", &raw_object, &build.rules))
         return NULL;
 
-    return Py_None;
+    struct HistoryBuild history_build = {
+        PyList_New(0),
+        PyList_New(0),
+        PyList_New(0),
+        PyList_New(0),
+        PyDict_New()
+    };
+    build.is_history = 0;
+
+    build.ready_json = PyDict_New();
+
+    struct KeysTreeList keys_tree_list = { PyList_New(0), PyList_New(0) };
+    FindAllKeysRawJson(build.rules, &keys_tree_list, PyList_New(0), PyList_New(0));
+
+    PyObject *raw_json = ConvertObjectToJson(raw_object, build.rules, keys_tree_list.keys_tree);
+    build.raw_json = raw_json;
+
+    if (!BuildJson(build, &history_build))
+        return NULL;
+
+    return build.ready_json;
 }
 
 

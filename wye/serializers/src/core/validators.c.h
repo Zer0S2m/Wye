@@ -1,4 +1,5 @@
-// Run validators
+/* Run validators */
+
 PyObject *RunValidators(PyObject *value, PyObject *validators);
 PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree);
 

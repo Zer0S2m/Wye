@@ -1,4 +1,5 @@
-// Logs
+/* Logs */
+
 void DisplayLog(PyObject *py_value);
 
 

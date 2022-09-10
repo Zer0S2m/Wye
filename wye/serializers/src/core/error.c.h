@@ -1,4 +1,5 @@
-// Set error
+/* Set error */
+
 int *SetValidationError();
 int *SetAttributeError();
 int *SetValidationDefaultError();
