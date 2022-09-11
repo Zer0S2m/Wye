@@ -477,6 +477,7 @@ from wye.serializers import fields
 - `ge: Union[int, float]` - для числовых значений это добавляет проверку `больше или равно`
 - `lt: Union[int, float]` - для числовых значений это добавляет проверку `меньше чем`
 - `le: Union[int, float]` - для числовых значений это добавляет проверку `меньше или равно`
+- `fill_type: Union[int, list, dict, float, set, frozenset, tuple, bool]` - тип заполнения (этот аргумент имеется только в `fields.LIST`)
 
 1) Типы:
     - `fields.BOOL` - Булевое значение
@@ -485,3 +486,4 @@ from wye.serializers import fields
     - `fields.FLOAT` - Число с плавающей точкой
     - `fields.SERIALIZER` - Вложенный сериализатор
     - `fields.BYTES` - байты
+    - `fields.LIST` - массив (имеет один тип заполнения)

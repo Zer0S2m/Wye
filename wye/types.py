@@ -1,6 +1,6 @@
 from typing import (
     Mapping, Any, Callable,
-    Awaitable, Dict
+    Awaitable, Dict, Union
 )
 
 
@@ -14,3 +14,4 @@ ASGIInstance = Callable[[Receive, Send], Awaitable[None]]
 ASGIApp = Callable[[Scope], ASGIInstance]
 
 JSON = Dict[str, Any]
+FILL_TYPE = Union[int, list, dict, float, set, frozenset, tuple, bool]

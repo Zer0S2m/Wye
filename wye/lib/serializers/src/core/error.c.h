@@ -9,6 +9,7 @@ int *SetGTError();
 int *SetGEError();
 int *SetLTError();
 int *SetLEError();
+int *SetErrorFillType();
 
 
 /**
@@ -17,7 +18,7 @@ int *SetLEError();
  * @return int*
  */
 int *SetValidationError() {
-    PyErr_SetString(PyExc_TypeError, "<WyeSerializers>: Validation error");
+    PyErr_SetString(PyExc_TypeError, "<WyeSerializers>: Validation error type");
     return (int *) 0;
 }
 
@@ -106,5 +107,16 @@ int *SetLTError() {
  */
 int *SetLEError() {
     PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Value is less than allowed");
+    return (int *) 0;
+}
+
+
+/**
+ * @brief Set the Error Fill Type object
+ *
+ * @return int*
+ */
+int *SetErrorFillType() {
+    PyErr_SetString(PyExc_ValueError, "<WyeSerializers>: Invalid fill type");
     return (int *) 0;
 }

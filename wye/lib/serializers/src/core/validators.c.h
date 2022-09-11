@@ -11,6 +11,8 @@ int *CheckMaxMinLength(PyObject *rule, PyObject *py_value);
 int *_CheckOpidNumber(PyObject *opid_value, PyObject *py_value, int opid);
 int *CheckOpidNumber(PyObject *rule, PyObject *py_value);
 
+int *CheckFillType(PyObject *value, PyObject *fill_type);
+
 
 /**
  * @brief
@@ -167,5 +169,22 @@ int *CheckOpidNumber(PyObject *rule, PyObject *py_value) {
             return SetLEError();
     }
 
+    return (int *) 1;
+}
+
+
+/**
+ * @brief
+ *
+ * @param value in python -> List[...]
+ * @param fill_type in python -> Union[int, list, dict, float, set, frozenset, tuple, bool]
+ * @return int*
+ */
+int *CheckFillType(PyObject *value, PyObject *fill_type) {
+    for (Py_ssize_t i_value = 0; i_value < PySequence_Length(value); i_value++) {
+        PyObject *object = PySequence_GetItem(value, i_value);
+        if (!PyObject_IsInstance(object, fill_type))
+            return SetErrorFillType();
+    }
     return (int *) 1;
 }
