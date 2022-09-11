@@ -49,6 +49,7 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args);
 #define IS_SERIALIZER_FIELD_KEY "IS_SERIALIZER"
 #define MAX_LENGTH_FIELD_KEY "MAX_LENGTH"
 #define MIN_LENGTH_FIELD_KEY "MIN_LENGTH"
+#define TYPE_FILL_FIELD_KEY "TYPE_FILL"
 #define GT_FIELD_KEY "GT"
 #define GE_FIELD_KEY "GE"
 #define LT_FIELD_KEY "LT"

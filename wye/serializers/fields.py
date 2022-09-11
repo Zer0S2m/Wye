@@ -4,8 +4,13 @@ from typing import (
 )
 
 from wye.errors import (
-    ErrorMaxLengthType, ErrorMinLengthType, ErrorMinLengthLargerMaxLength
+    ErrorMaxLengthType, ErrorMinLengthType, ErrorMinLengthLargerMaxLength,
+    ErrorFillType
 )
+from wye.types import FILL_TYPE
+
+
+FILL_TYPES = (int, list, dict, float, set, frozenset, tuple, bool,)
 
 
 ALIAS = "ALIAS"
@@ -16,6 +21,7 @@ IS_SERIALIZER = "IS_SERIALIZER"
 VALIDATORS = "VALIDATORS"
 MAX_LENGTH = "MAX_LENGTH"
 MIN_LENGTH = "MIN_LENGTH"
+TYPE_FILL_ = "TYPE_FILL"
 GT = "GT"
 GE = "GE"
 LT = "LT"
@@ -53,6 +59,8 @@ class BaseField:
 
         self._check_min_max_length()
         self._check_min_larger_max()
+
+        self._rules = self._build_rules()
 
     def _build_rules(self) -> Dict[str, Any]:
         rules = {
@@ -107,7 +115,7 @@ class BaseField:
         self._required = value
 
     def __call__(self) -> Dict[str, Any]:
-        return self._build_rules()
+        return self._rules
 
     def __repr__(self) -> str:
         return f"Field <{self.__class__.__name__}> type:{self.__type__}"
@@ -131,6 +139,38 @@ class BOOL(BaseField):
 
 class BYTES(BaseField):
     __type__ = bytes
+
+
+class LIST(BaseField):
+    __type__ = list
+
+    def __init__(
+        self,
+        *args,
+        fill_type: FILL_TYPE = None,
+        **kwargs,
+    ) -> None:
+        super(LIST, self).__init__(*args, **kwargs)
+
+        self._check_fill_type(fill_type)
+        self._fill_type = fill_type
+
+        self._rules.update({
+            f"{TYPE_FILL_}": fill_type
+        })
+
+    @property
+    def fill_type(self) -> Optional[Any]:
+        return self._fill_type
+
+    @fill_type.setter
+    def fill_type(self, value: FILL_TYPE) -> None:
+        self._check_fill_type(value)
+        self._fill_type = value
+
+    def _check_fill_type(self, fill_type: FILL_TYPE) -> None:
+        if fill_type is not None and not issubclass(fill_type, FILL_TYPES):
+            raise ErrorFillType(f"'{FILL_TYPES}' not containt '{fill_type}'")
 
 
 class SERIALIZER(BaseField):

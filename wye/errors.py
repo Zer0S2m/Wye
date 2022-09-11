@@ -38,4 +38,8 @@ class ErrorValidationJson(BaseError):
 
 
 class ErrorNotField(BaseError):
-    """Ton field"""
+    """Not field"""
+
+
+class ErrorFillType(BaseError):
+    """Is not contain fill_type in arr FILL_TYPES"""

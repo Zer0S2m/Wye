@@ -51,6 +51,12 @@ PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_fie
     if (!CheckOpidNumber(build_field_check.rule, new_value))
         return NULL;
 
+    PyObject *fill_type = PyDict_GetItemString(build_field_check.rule, TYPE_FILL_FIELD_KEY);
+    if (fill_type && fill_type != Py_None) {
+        if (!CheckFillType(new_value, fill_type))
+            return NULL;
+    }
+
     return new_value;
 }
 
