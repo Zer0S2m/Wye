@@ -57,6 +57,14 @@ PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_fie
             return NULL;
     }
 
+    PyObject *fill_types = PyDict_GetItemString(build_field_check.rule, TYPES_FILL_FIELD_KEY);
+    if (fill_types && fill_types != Py_None) {
+        if (PyObject_Length(fill_types) > 0) {
+            if (!CheckFillTypes(new_value, fill_types))
+                return NULL;
+        }
+    }
+
     return new_value;
 }
 

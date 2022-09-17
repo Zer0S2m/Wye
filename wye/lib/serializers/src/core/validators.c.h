@@ -12,6 +12,7 @@ int *_CheckOpidNumber(PyObject *opid_value, PyObject *py_value, int opid);
 int *CheckOpidNumber(PyObject *rule, PyObject *py_value);
 
 int *CheckFillType(PyObject *value, PyObject *fill_type);
+int *CheckFillTypes(PyObject *value, PyObject *fill_types);
 
 
 /**
@@ -25,7 +26,7 @@ PyObject *RunValidators(PyObject *value, PyObject *validators) {
     PyObject *new_value = value;
     for (int i_validator = 0; i_validator < PyObject_Length(validators); i_validator++){
         PyObject *validator = PySequence_GetItem(validators, i_validator);
-        new_value = PyObject_CallFunction(validator, "O", new_value);
+        new_value = PyObject_CallFunctionObjArgs(validator, new_value, NULL);
     }
 
     return new_value;
@@ -184,6 +185,24 @@ int *CheckFillType(PyObject *value, PyObject *fill_type) {
     for (Py_ssize_t i_value = 0; i_value < PySequence_Length(value); i_value++) {
         PyObject *object = PySequence_GetItem(value, i_value);
         if (!PyObject_IsInstance(object, fill_type))
+            return SetErrorFillType();
+    }
+    return (int *) 1;
+}
+
+
+
+/**
+ * @brief
+ *
+ * @param value in python -> Union[Tuple[...], Set[...]]
+ * @param fill_types in python -> Iterable[Union[int, list, dict, float, set, frozenset, tuple, bool]]
+ * @return int*
+ */
+int *CheckFillTypes(PyObject *value, PyObject *fill_types) {
+    for (Py_ssize_t i_value = 0; i_value < PyObject_Length(value); i_value++) {
+        PyObject *object = PySequence_GetItem(value, i_value);
+        if (!PySequence_Contains(fill_types, PyObject_Type(object)))
             return SetErrorFillType();
     }
     return (int *) 1;

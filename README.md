@@ -418,20 +418,21 @@ from wye.serializers import fields
 
 
 class Serializer1(Serializer):
-    param_1: int = fields.INT(default = 10, alias = "param1")
-    param_2: str = fields.STR(alias = "param2")
+    param_1: int = fields.INT(default=10, alias="param1")
+    param_2: str = fields.STR(alias="param2")
     param_3: float = fields.FLOAT()
-    param_4: bool = fields.BOOL(alias = "param4")
+    param_4: bool = fields.BOOL(alias="param4")
 
 
 class Serializer2(Serializer):
-    param_1: Serializer_1 = fields.SERIALIZER(alias = "param1")
-    param_2: int = fields.INT(alias = "param2")
+    param_1: Serializer_1 = fields.SERIALIZER(alias="param1")
+    param_2: int = fields.INT(alias="param2")
+    param_3: list = fields.LIST(alias="param3", fill_type=int)
 
 
 class Serializer3(Serializer2):
-    param_3: Serializer2 = fields.SERIALIZER(alias = "param3")
-    param_4: int = fields.INT(alias = "param4")
+    param_3: Serializer2 = fields.SERIALIZER(alias="param3")
+    param_4: int = fields.INT(alias="param4")
 ```
 
 Методы:
@@ -478,6 +479,7 @@ from wye.serializers import fields
 - `lt: Union[int, float]` - для числовых значений это добавляет проверку `меньше чем`
 - `le: Union[int, float]` - для числовых значений это добавляет проверку `меньше или равно`
 - `fill_type: Union[int, list, dict, float, set, frozenset, tuple, bool]` - тип заполнения (этот аргумент имеется только в `fields.LIST`)
+- `fill_types: Iterable[int, list, dict, float, set, frozenset, tuple, bool]` - тип заполнения (этот аргумент имеется только в `fields.TUPLE`)
 
 1) Типы:
     - `fields.BOOL` - Булевое значение
@@ -487,3 +489,4 @@ from wye.serializers import fields
     - `fields.SERIALIZER` - Вложенный сериализатор
     - `fields.BYTES` - байты
     - `fields.LIST` - массив (имеет один тип заполнения)
+    - `fields.TUPLE` - кортеж (имеет несколько типов заполнения)
