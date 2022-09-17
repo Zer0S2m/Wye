@@ -1,6 +1,7 @@
 from typing import (
     Any, Dict, Optional,
-    Callable, List, Union
+    Callable, List, Union,
+    Iterable
 )
 
 from wye.errors import (
@@ -22,6 +23,7 @@ VALIDATORS = "VALIDATORS"
 MAX_LENGTH = "MAX_LENGTH"
 MIN_LENGTH = "MIN_LENGTH"
 TYPE_FILL_ = "TYPE_FILL"
+TYPES_FILL = "TYPES_FILL"
 GT = "GT"
 GE = "GE"
 LT = "LT"
@@ -156,7 +158,7 @@ class LIST(BaseField):
         self._fill_type = fill_type
 
         self._rules.update({
-            f"{TYPE_FILL_}": fill_type
+            f"{TYPE_FILL_}": self._fill_type
         })
 
     @property
@@ -171,6 +173,45 @@ class LIST(BaseField):
     def _check_fill_type(self, fill_type: FILL_TYPE) -> None:
         if fill_type is not None and not issubclass(fill_type, FILL_TYPES):
             raise ErrorFillType(f"'{FILL_TYPES}' not containt '{fill_type}'")
+
+
+class TUPLE(BaseField):
+    __type__ = tuple
+
+    def __init__(
+        self,
+        *args,
+        fill_types: Optional[Iterable[FILL_TYPE]] = None,
+        **kwargs,
+    ) -> None:
+        super(TUPLE, self).__init__(*args, **kwargs)
+
+        self._check_fill_types(fill_types)
+        self._fill_types = fill_types
+
+        self._rules.update({
+            f"{TYPES_FILL}": self._fill_types
+        })
+
+    @property
+    def fill_types(self) -> Optional[Iterable[FILL_TYPE]]:
+        return self._fill_types
+
+    @fill_types.setter
+    def fill_types(self, value: Optional[Iterable[FILL_TYPE]]) -> None:
+        self._check_fill_types(value)
+        self._fill_types = value
+
+    def _check_fill_types(
+        self,
+        fill_types: Iterable[FILL_TYPE]
+    ) -> None:
+        if fill_types is not None or not fill_types:
+            return
+
+        for fill_type in fill_types:
+            if not issubclass(fill_type, FILL_TYPES):
+                raise ErrorFillType(f"'{fill_type}' not containt '{fill_type}'")
 
 
 class SERIALIZER(BaseField):
