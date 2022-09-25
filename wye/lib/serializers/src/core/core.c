@@ -10,6 +10,7 @@ struct Build {
     PyObject *raw_json; // in python -> Dict[str, Any]
     PyObject *ready_json; // in python -> Dict[str, Any]
     PyObject *rules; // in python -> Dict[str, Any]
+    PyObject *base_serializer;
     int is_history;
 };
 
@@ -22,6 +23,7 @@ struct BuildFieldCheck {
     PyObject *param_title; // in python str
     PyObject *rule; // in python -> dict
     PyObject *raw_json_obj; // in python -> typing.Any
+    PyObject *base_serializer;
 };
 
 // For optimization
@@ -53,8 +55,35 @@ PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_fie
 
     PyObject *fill_type = PyDict_GetItemString(build_field_check.rule, TYPE_FILL_FIELD_KEY);
     if (fill_type && fill_type != Py_None) {
-        if (!CheckFillType(new_value, fill_type))
-            return NULL;
+        int is_subclass_base_serializer = PyObject_IsSubclass(fill_type, build_field_check.base_serializer);
+        if (!is_subclass_base_serializer) {
+            if (!CheckFillType(new_value, fill_type))
+                return NULL;
+        } else if (is_subclass_base_serializer) {
+            PyObject *isinstance_nested_ser = PyObject_CallObject(fill_type, NULL);
+            PyObject *rules_nested_ser = PyObject_CallMethodNoArgs(isinstance_nested_ser, BUILD_RULE_METHOD);
+
+            struct HistoryBuild history_build = {
+                PyList_New(0),
+                PyList_New(0),
+                PyList_New(0),
+                PyList_New(0),
+                PyDict_New()
+            };
+
+            struct Build new_build = {
+                NULL,
+                PyDict_New(),
+                rules_nested_ser,
+                build_field_check.base_serializer,
+                0
+            };
+            new_value = BuildJsonFromList(
+                new_build,
+                build_field_check.raw_json_obj,
+                &history_build
+            );
+        }
     }
 
     PyObject *fill_types = PyDict_GetItemString(build_field_check.rule, TYPES_FILL_FIELD_KEY);
@@ -342,7 +371,12 @@ int *BuildSingleField(struct Build build, PyObject *key_tree_element) {
     PyObject *rule = GET_RULES(rules_param);
     PyObject *raw_json_obj = PyDict_GetItem(build.raw_json, key_tree_element);
 
-    struct BuildFieldCheck build_field_check = { key_tree_element, rule, raw_json_obj };
+    struct BuildFieldCheck build_field_check = {
+        key_tree_element,
+        rule,
+        raw_json_obj,
+        build.base_serializer
+    };
 
     if (!CheckField(build_field_check))
         return NULL;
@@ -566,7 +600,7 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     PyObject *raw_json;
     struct Build build;
 
-    if (!PyArg_ParseTuple(args, "OO", &raw_json, &build.rules))
+    if (!PyArg_ParseTuple(args, "OOO", &raw_json, &build.rules, &build.base_serializer))
         return NULL;
 
     struct HistoryBuild history_build = {
@@ -619,7 +653,7 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
     PyObject *raw_object;
     struct Build build;
 
-    if (!PyArg_ParseTuple(args, "OO", &raw_object, &build.rules))
+    if (!PyArg_ParseTuple(args, "OOO", &raw_object, &build.rules, &build.base_serializer))
         return NULL;
 
     struct HistoryBuild history_build = {

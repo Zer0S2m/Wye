@@ -478,7 +478,7 @@ from wye.serializers import fields
 - `ge: Union[int, float]` - для числовых значений это добавляет проверку `больше или равно`
 - `lt: Union[int, float]` - для числовых значений это добавляет проверку `меньше чем`
 - `le: Union[int, float]` - для числовых значений это добавляет проверку `меньше или равно`
-- `fill_type: Union[int, list, dict, float, set, frozenset, tuple, bool]` - тип заполнения (этот аргумент имеется только в `fields.LIST`)
+- `fill_type: Union[int, list, dict, float, set, frozenset, tuple, bool, Type[Serializer]]` - тип заполнения (этот аргумент имеется только в `fields.LIST`, `fields.LIST_SERIALIZERS`)
 - `fill_types: Iterable[int, list, dict, float, set, frozenset, tuple, bool]` - тип заполнения (этот аргумент имеется только в `fields.TUPLE`)
 
 1) Типы:
@@ -490,3 +490,4 @@ from wye.serializers import fields
     - `fields.BYTES` - байты
     - `fields.LIST` - массив (имеет один тип заполнения)
     - `fields.TUPLE` - кортеж (имеет несколько типов заполнения)
+    - `fields.LIST_SERIALIZERS` - вложенный сериализатор

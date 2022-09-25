@@ -1,7 +1,7 @@
 from typing import (
     Any, Dict, Optional,
-    Callable, List, Union,
-    Iterable
+    Callable, List, Type,
+    Union, Iterable
 )
 
 from wye.errors import (
@@ -9,25 +9,14 @@ from wye.errors import (
     ErrorFillType
 )
 from wye.types import FILL_TYPE
-
-
-FILL_TYPES = (int, list, dict, float, set, frozenset, tuple, bool,)
-
-
-ALIAS = "ALIAS"
-TYPE = "TYPE"
-DEFAULT = "DEFAULT"
-REQUIRED = "REQUIRED"
-IS_SERIALIZER = "IS_SERIALIZER"
-VALIDATORS = "VALIDATORS"
-MAX_LENGTH = "MAX_LENGTH"
-MIN_LENGTH = "MIN_LENGTH"
-TYPE_FILL_ = "TYPE_FILL"
-TYPES_FILL = "TYPES_FILL"
-GT = "GT"
-GE = "GE"
-LT = "LT"
-LE = "LE"
+from wye.serializers import Serializer
+from wye.serializers.constants import (
+    FILL_TYPES, ALIAS, TYPE,
+    DEFAULT, REQUIRED, IS_SERIALIZER,
+    VALIDATORS, MAX_LENGTH, MIN_LENGTH,
+    TYPE_FILL_, TYPES_FILL, GT,
+    GE, LT, LE
+)
 
 
 class BaseField:
@@ -217,3 +206,29 @@ class TUPLE(BaseField):
 class SERIALIZER(BaseField):
     __type__ = dict
     __is_serializer__ = True
+
+
+class LIST_SERIALIZERS(BaseField):
+    __type__ = list
+
+    def __init__(
+        self,
+        *args,
+        fill_type: Optional[Type[Serializer]] = None,
+        **kwargs,
+    ) -> None:
+        super(LIST_SERIALIZERS, self).__init__(*args, **kwargs)
+
+        self._check_fill_type(fill_type)
+        self._fill_type = fill_type
+
+        self._rules.update({
+            f"{TYPE_FILL_}": self._fill_type
+        })
+
+    def _check_fill_type(
+        self,
+        fill_type: Optional[Type[Serializer]]
+    ) -> None:
+        if fill_type is not None and not issubclass(fill_type, Serializer):
+            raise ErrorFillType(f"'{fill_type}' is not 'Serializer'")
