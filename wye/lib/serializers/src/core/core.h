@@ -56,6 +56,9 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args);
 #define LT_FIELD_KEY "LT"
 #define LE_FIELD_KEY "LE"
 
+#define BUILD_RULE_METHOD PyUnicode_FromString("_build_rules")
+#define RULES_ATTR_KEY PyUnicode_FromString("_rules")
+
 #define LAST_KEY_TREE (Py_ssize_t) 1
 #define SINGLE_LEVEL_JSON (Py_ssize_t) 2
 

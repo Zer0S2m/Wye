@@ -3,7 +3,7 @@ from typing import (
     Tuple, Union
 )
 
-from wye.serializers.fields import ALIAS
+from wye.serializers.constants import ALIAS
 from wye.errors import (
     ErrorValidationJson, ErrorNotField
 )
