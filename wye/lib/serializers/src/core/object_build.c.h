@@ -1,8 +1,8 @@
 /* Utils for build json from objects */
 
-PyObject *GetFieldByPath(PyObject *object, PyObject *key_tree);
-void BuildOneFieldInJson(PyObject *json, PyObject *key_tree, PyObject *value);
-void ConvertObjectToJson(PyObject *json, PyObject *object, PyObject *keys_tree);
+PyObject *GetFieldByPath(PyObject *, PyObject *);
+void BuildOneFieldInJson(PyObject *, PyObject *, PyObject *);
+void ConvertObjectToJson(PyObject *, PyObject *, PyObject *);
 
 
 /**

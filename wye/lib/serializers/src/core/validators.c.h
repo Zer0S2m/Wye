@@ -1,18 +1,18 @@
 /* Run validators */
 
-PyObject *RunValidators(PyObject *value, PyObject *validators);
-PyObject *SplitKeysTreeRunValidatorDict(PyObject *keys_tree);
+PyObject *RunValidators(PyObject *, PyObject *);
+PyObject *SplitKeysTreeRunValidatorDict(PyObject *);
 
-int *ValidationMaxLengthValueNumber(PyObject *py_value, PyObject *max_length);
-int *ValidationMinLengthValueNumber(PyObject *py_value, PyObject *min_length);
-int *_CheckMaxMinLength(PyObject *max_length, PyObject *min_length, PyObject *py_value);
-int *CheckMaxMinLength(PyObject *rule, PyObject *py_value);
+int *ValidationMaxLengthValueNumber(PyObject *, PyObject *);
+int *ValidationMinLengthValueNumber(PyObject *, PyObject *);
+int *_CheckMaxMinLength(PyObject *, PyObject *, PyObject *);
+int *CheckMaxMinLength(PyObject *, PyObject *);
 
-int *_CheckOpidNumber(PyObject *opid_value, PyObject *py_value, int opid);
-int *CheckOpidNumber(PyObject *rule, PyObject *py_value);
+int *_CheckOpidNumber(PyObject *, PyObject *, int);
+int *CheckOpidNumber(PyObject *, PyObject *);
 
-int *CheckFillType(PyObject *value, PyObject *fill_type);
-int *CheckFillTypes(PyObject *value, PyObject *fill_types);
+int *CheckFillType(PyObject *, PyObject *);
+int *CheckFillTypes(PyObject *, PyObject *);
 
 
 /**
