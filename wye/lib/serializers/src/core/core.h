@@ -11,26 +11,28 @@ struct Build;
 struct KeysTreeList;
 struct BuildFieldCheck;
 struct HistoryBuild;
+struct State;
 
 // Build json
-PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_field_check);
-int *SetDefaultValue(struct Build build, struct BuildFieldCheck build_field_check);
-int *CheckField(struct BuildFieldCheck build_field_check);
-int *SetField(struct Build build, struct BuildFieldCheck build_field_check);
-int IsThereAnyNestingInKey(PyObject *key, PyObject *keys_tree, int level_key_tree, Py_ssize_t level);
-PyObject *GetParamFromLevelKeys(PyObject *keys_level);
-PyObject *GetPartRule(PyObject *rules, PyObject *key_tree);
-PyObject *GetPartReadyJson(PyObject *ready_json, PyObject *key_tree);
-void BuildInitialAssemblyReadyJson(PyObject *ready_json, PyObject *keys_tree);
-void FindAllKeysRawJson(PyObject *rules, struct KeysTreeList *keys_tree_list, PyObject *path, PyObject *alias_path);
-int *BuildSingleField(struct Build build, PyObject *key_tree_element);
-void ClearReadyJsonFromEmptyDict(PyObject *ready_json);
-void SetDefaultValueInRawJson(PyObject *raw_json, PyObject *key_tree, PyObject *value);
-int *BuildJson(struct Build build, struct HistoryBuild *history_build);
-PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build);
-static PyObject *method_build_json(PyObject *self, PyObject *args);
-static PyObject *method_is_validate(PyObject *self, PyObject *args);
-static PyObject *method_build_json_from_object(PyObject *self, PyObject *args);
+PyObject *ValidationField(PyObject *, struct BuildFieldCheck);
+int *SetDefaultValue(struct Build, struct BuildFieldCheck);
+int *CheckField(struct BuildFieldCheck);
+int *SetField(struct Build, struct BuildFieldCheck);
+int IsThereAnyNestingInKey(PyObject *, PyObject *, int, Py_ssize_t);
+PyObject *GetParamFromLevelKeys(PyObject *);
+PyObject *GetPartRule(PyObject *, PyObject *);
+PyObject *GetPartReadyJson(PyObject *, PyObject *);
+void BuildInitialAssemblyReadyJson(PyObject *, PyObject *);
+void FindAllKeysRawJson(PyObject *, struct KeysTreeList *, PyObject *, PyObject *);
+int *BuildSingleField(struct Build, PyObject *);
+void ClearReadyJsonFromEmptyDict(PyObject *);
+void SetDefaultValueInRawJson(PyObject *, PyObject *, PyObject *);
+int *BuildJson(struct Build, struct HistoryBuild *, struct State *);
+PyObject *BuildJsonFromList(struct Build , PyObject *, struct HistoryBuild *, struct State *);
+
+static PyObject *method_build_json(PyObject *, PyObject *);
+static PyObject *method_is_validate(PyObject *, PyObject *);
+static PyObject *method_build_json_from_object(PyObject *, PyObject *);
 
 
 #define RESET_COLOR "\033[0m"
@@ -58,6 +60,8 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args);
 
 #define BUILD_RULE_METHOD PyUnicode_FromString("_build_rules")
 #define RULES_ATTR_KEY PyUnicode_FromString("_rules")
+
+#define WARNING_REQUIRED_PARAM_STR PyUnicode_FromString(" - is a required field")
 
 #define LAST_KEY_TREE (Py_ssize_t) 1
 #define SINGLE_LEVEL_JSON (Py_ssize_t) 2

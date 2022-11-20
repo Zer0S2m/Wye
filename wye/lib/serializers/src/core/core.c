@@ -4,6 +4,7 @@
 #include "error.c.h"
 #include "validators.c.h"
 #include "object_build.c.h"
+#include "state.c.h"
 
 
 struct Build {
@@ -34,6 +35,11 @@ struct HistoryBuild {
     PyObject *keys_tree_alias; // in python -> List[str]
     PyObject *run_validators; // in python -> Dict[str, bool]
     int *is_any_nesting_in_key; // array
+};
+
+
+struct State __state = {
+    NULL
 };
 
 
@@ -81,7 +87,8 @@ PyObject *ValidationField(PyObject *validators, struct BuildFieldCheck build_fie
             new_value = BuildJsonFromList(
                 new_build,
                 build_field_check.raw_json_obj,
-                &history_build
+                &history_build,
+                &__state
             );
         }
     }
@@ -446,7 +453,7 @@ void SetDefaultValueInRawJson(PyObject *raw_json, PyObject *key_tree, PyObject *
  * @param history_build
  * @return int*
 */
-int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
+int *BuildJson(struct Build build, struct HistoryBuild *history_build, struct State *state) {
     struct KeysTreeList keys_tree_list = { PyList_New(0), PyList_New(0) };
     PyObject *keys_tree = keys_tree_list.keys_tree;
     PyObject *keys_tree_alias = keys_tree_list.keys_tree_alias;
@@ -461,6 +468,7 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
         keys_tree = history_build->keys_tree;
         keys_tree_alias = history_build->keys_tree_alias;
     }
+
 
     BuildInitialAssemblyReadyJson(build.ready_json, keys_tree_alias);
 
@@ -488,8 +496,11 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
             } else if (history_build->is_any_nesting_in_key[i_key_tree])
                 continue;
 
-            if (!BuildSingleField(build, key_tree_element))
+            if (!BuildSingleField(build, key_tree_element)) {
+                SetCurrentField(state, key_tree_element);
+                SetWarningStr(state);
                 return NULL;
+            }
         } else {
             PyObject *param_title, *part_rule;
             if (!build.is_history) {
@@ -514,7 +525,6 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
                 history_build->is_any_nesting_in_key[i_key_tree] = is_any_nesting_in_key;
                 if (is_any_nesting_in_key)
                     continue;
-
             } else if (history_build->is_any_nesting_in_key[i_key_tree])
                 continue;
 
@@ -548,8 +558,11 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
 
             struct Build new_build = { part_raw_json, part_ready_json, part_rule };
 
-            if (!BuildSingleField(new_build, param_title))
+            if (!BuildSingleField(new_build, param_title)) {
+                SetCurrentField(state, param_title);
+                SetWarningStr(state);
                 return NULL;
+            }
         }
     }
 
@@ -567,7 +580,12 @@ int *BuildJson(struct Build build, struct HistoryBuild *history_build) {
  * @param history_build
  * @return PyObject*
  */
-PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct HistoryBuild *history_build) {
+PyObject *BuildJsonFromList(
+    struct Build build,
+    PyObject *raw_json,
+    struct HistoryBuild *history_build,
+    struct State *state
+) {
     Py_ssize_t length_raw_json = PyList_Size(raw_json);
     PyObject *list_ready_json = PyList_New(length_raw_json);
 
@@ -575,7 +593,7 @@ PyObject *BuildJsonFromList(struct Build build, PyObject *raw_json, struct Histo
         PyObject *raw_json_obj = PyList_GetItem(raw_json, i_raw_json_obj);
         build.raw_json = raw_json_obj;
 
-        if (!BuildJson(build, history_build))
+        if (!BuildJson(build, history_build, state))
             return NULL;
 
         build.is_history = 1;
@@ -615,15 +633,19 @@ static PyObject *method_build_json(PyObject *self, PyObject *args) {
     build.ready_json = PyDict_New();
 
     if (PyList_Check(raw_json)) {
-        PyObject *list_ready_json = BuildJsonFromList(build, raw_json, &history_build);
-        if (!list_ready_json)
+        PyObject *list_ready_json = BuildJsonFromList(build, raw_json, &history_build, &__state);
+        if (!list_ready_json) {
+            DisplayLog(__state.current_error, "r");
             return NULL;
+        }
 
         build.ready_json = list_ready_json;
     } else {
         build.raw_json = raw_json;
-        if (!BuildJson(build, &history_build))
+        if (!BuildJson(build, &history_build, &__state)) {
+            DisplayLog(__state.current_error, "r");
             return NULL;
+        }
     }
 
     free(history_build.is_any_nesting_in_key);
@@ -681,7 +703,7 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
             PyList_SetItem(raw_json_list, i_raw_object, raw_json);
         }
 
-        PyObject *list_ready_json = BuildJsonFromList(build, raw_json_list, &history_build);
+        PyObject *list_ready_json = BuildJsonFromList(build, raw_json_list, &history_build, &__state);
         if (!list_ready_json)
             return NULL;
 
@@ -690,7 +712,7 @@ static PyObject *method_build_json_from_object(PyObject *self, PyObject *args) {
         PyObject *raw_json = PyDict_New();
         ConvertObjectToJson(raw_json, raw_object, keys_tree_list.keys_tree);
         build.raw_json = raw_json;
-        if (!BuildJson(build, &history_build))
+        if (!BuildJson(build, &history_build, &__state))
             return NULL;
     }
 
