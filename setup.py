@@ -47,6 +47,13 @@ def install_wye():
                 include_dirs=['./wye/lib/serializers/src/'],
                 optional=False,
                 language="c"
+            ),
+            Extension(
+                "wye_temp_engine",
+                ["./wye/lib/temp_engine/src/core/core.c"],
+                include_dirs=['./wye/lib/temp_engine/src/'],
+                optional=False,
+                language="c"
             )
         ]
     )

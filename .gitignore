@@ -45,6 +45,7 @@ media/
 .vscode
 .idea
 wye_serializers.egg-info/
+wye_temp_engine.egg-info/
 
 # build
 build
